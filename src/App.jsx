@@ -42,7 +42,23 @@ function App() {
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
 
+  const checkCameraSupport = () => {
+    if (typeof navigator === 'undefined') {
+      alert('Camera API is not available in this environment.')
+      setCameraPermission('denied')
+      return false
+    }
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+      alert('Camera API is not supported on this device/browser. Please use Safari on iOS or Chrome on Android.')
+      setCameraPermission('denied')
+      return false
+    }
+    return true
+  }
+
   const checkCameraPermission = async () => {
+    if (!checkCameraSupport()) return
+    
     try {
       const permissionStatus = await navigator.permissions.query({ name: 'camera' })
       setCameraPermission(permissionStatus.state)
@@ -63,6 +79,8 @@ function App() {
   }
 
   const requestCameraAccess = async () => {
+    if (!checkCameraSupport()) return
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' } 
@@ -88,6 +106,13 @@ function App() {
   }
 
   const startCamera = async () => {
+    if (typeof navigator === 'undefined' || 
+        !navigator.mediaDevices || 
+        typeof navigator.mediaDevices.getUserMedia !== 'function') {
+      console.log('Camera API not supported')
+      return
+    }
+
     const video = videoRef.current
     if (!video) return
     
