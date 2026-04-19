@@ -42,16 +42,50 @@ function App() {
   const streamRef = useRef(null)
 
   const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
+    const video = videoRef.current
+    if (!video) return
+    
+    const stopCurrentStream = () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current = null
       }
-    } catch (err) {
-      console.error('Error accessing camera:', err)
+    }
+    
+    const tryCamera = async (facingMode) => {
+      try {
+        stopCurrentStream()
+        
+        const constraints = {
+          video: {
+            facingMode: facingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        }
+        
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        streamRef.current = stream
+        video.srcObject = stream
+        
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play().then(resolve).catch(resolve)
+          }
+          setTimeout(resolve, 2000)
+        })
+        
+        return true
+      } catch (err) {
+        console.log(`Camera failed with ${facingMode}:`, err.message)
+        return false
+      }
+    }
+    
+    const success = await tryCamera({ ideal: 'environment' })
+    if (!success) {
+      await tryCamera({ ideal: 'user' })
     }
   }
 
@@ -174,6 +208,7 @@ function App() {
             ref={videoRef}
             autoPlay
             playsInline
+            muted
             className="absolute inset-0 w-full h-full object-cover"
           />
           <canvas ref={canvasRef} className="hidden" />
