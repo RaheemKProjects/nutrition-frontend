@@ -7,5 +7,14 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     host: true
+  },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      external: []
+    }
+  },
+  optimizeDeps: {
+    include: []
   }
 })

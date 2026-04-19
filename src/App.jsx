@@ -43,21 +43,29 @@ function App() {
   const streamRef = useRef(null)
 
   const checkCameraSupport = () => {
-    if (typeof navigator === 'undefined') {
-      alert('Camera API is not available in this environment.')
-      setCameraPermission('denied')
+    try {
+      const nav = window.navigator
+      if (!nav) return false
+      
+      const mediaDevices = nav.mediaDevices
+      if (!mediaDevices) return false
+      
+      if (typeof mediaDevices.getUserMedia !== 'function') return false
+      
+      return true
+    } catch (e) {
+      console.log('Camera check error:', e)
       return false
     }
-    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-      alert('Camera API is not supported on this device/browser. Please use Safari on iOS or Chrome on Android.')
-      setCameraPermission('denied')
-      return false
-    }
-    return true
   }
 
   const checkCameraPermission = async () => {
-    if (!checkCameraSupport()) return
+    const isSupported = checkCameraSupport()
+    if (!isSupported) {
+      alert('Camera API is not supported on this device/browser.')
+      setCameraPermission('denied')
+      return
+    }
     
     try {
       const permissionStatus = await navigator.permissions.query({ name: 'camera' })
@@ -79,7 +87,11 @@ function App() {
   }
 
   const requestCameraAccess = async () => {
-    if (!checkCameraSupport()) return
+    const isSupported = checkCameraSupport()
+    if (!isSupported) {
+      alert('Camera API is not supported on this device/browser.')
+      return
+    }
     
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -106,9 +118,8 @@ function App() {
   }
 
   const startCamera = async () => {
-    if (typeof navigator === 'undefined' || 
-        !navigator.mediaDevices || 
-        typeof navigator.mediaDevices.getUserMedia !== 'function') {
+    const isSupported = checkCameraSupport()
+    if (!isSupported) {
       console.log('Camera API not supported')
       return
     }
