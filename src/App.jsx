@@ -46,20 +46,39 @@ function App() {
     try {
       const permissionStatus = await navigator.permissions.query({ name: 'camera' })
       setCameraPermission(permissionStatus.state)
-      permissionStatus.onchange = () => setCameraPermission(permissionStatus.state)
+      permissionStatus.onchange = () => setCameraPermission(permissionState.state)
+      alert(`Current camera permission: ${permissionStatus.state}`)
     } catch (err) {
-      console.log('Permission API not supported')
+      console.log('Permission API not supported, trying direct camera access')
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+        stream.getTracks().forEach(track => track.stop())
+        setCameraPermission('granted')
+        alert('Camera is accessible!')
+      } catch (e) {
+        setCameraPermission('denied')
+        alert('Cannot access camera. Please check device settings.')
+      }
     }
   }
 
   const requestCameraAccess = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      })
       stream.getTracks().forEach(track => track.stop())
       setCameraPermission('granted')
+      alert('Camera access granted!')
     } catch (err) {
-      if (err.name === 'NotAllowedError') {
+      console.error('Camera error:', err)
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setCameraPermission('denied')
+        alert('Camera access denied. Please enable it in your device Settings.')
+      } else if (err.name === 'NotFoundError') {
+        alert('No camera found on this device.')
+      } else {
+        alert(`Camera error: ${err.message}`)
       }
     }
   }
