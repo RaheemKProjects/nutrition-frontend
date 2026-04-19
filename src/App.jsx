@@ -37,9 +37,36 @@ function App() {
   const [screen, setScreen] = useState('home')
   const [capturedImage, setCapturedImage] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(true)
+  const [cameraPermission, setCameraPermission] = useState('prompt')
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
+
+  const checkCameraPermission = async () => {
+    try {
+      const permissionStatus = await navigator.permissions.query({ name: 'camera' })
+      setCameraPermission(permissionStatus.state)
+      permissionStatus.onchange = () => setCameraPermission(permissionStatus.state)
+    } catch (err) {
+      console.log('Permission API not supported')
+    }
+  }
+
+  const requestCameraAccess = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      stream.getTracks().forEach(track => track.stop())
+      setCameraPermission('granted')
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        setCameraPermission('denied')
+      }
+    }
+  }
+
+  const openSettings = () => {
+    window.open('app-settings:')
+  }
 
   const startCamera = async () => {
     const video = videoRef.current
@@ -130,6 +157,10 @@ function App() {
     setCapturedImage(null)
     setDrawerOpen(false)
   }
+
+  useEffect(() => {
+    checkCameraPermission()
+  }, [])
 
   useEffect(() => {
     if (screen === 'camera' || screen === 'home') {
@@ -291,10 +322,60 @@ function App() {
   if (screen === 'settings') {
     return (
       <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
-          <Settings className="w-16 h-16 text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Settings</h2>
-          <p className="text-gray-500 text-center">Coming soon...</p>
+        <div className="pt-16 md:pt-8 p-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
+          
+          <div className="space-y-4">
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h3 className="font-semibold text-gray-800 mb-3">Camera Access</h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Camera Permission</span>
+                  <span className={`text-sm font-medium ${
+                    cameraPermission === 'granted' ? 'text-green-600' : 
+                    cameraPermission === 'denied' ? 'text-red-600' : 'text-yellow-600'
+                  }`}>
+                    {cameraPermission === 'granted' ? 'Allowed' : 
+                     cameraPermission === 'denied' ? 'Denied' : 'Not Set'}
+                  </span>
+                </div>
+                
+                <Button
+                  onClick={requestCameraAccess}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  <Camera className="w-5 h-5 mr-2" />
+                  Request Camera Access
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={checkCameraPermission}
+                  className="w-full"
+                >
+                  Check Permission Status
+                </Button>
+                
+                {cameraPermission === 'denied' && (
+                  <Button
+                    variant="outline"
+                    onClick={openSettings}
+                    className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                  >
+                    <Settings className="w-5 h-5 mr-2" />
+                    Open Device Settings
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h3 className="font-semibold text-gray-800 mb-2">About</h3>
+              <p className="text-sm text-gray-500">NutriSnap v1.0.0</p>
+              <p className="text-sm text-gray-500 mt-1">Track your nutrition effortlessly</p>
+            </div>
+          </div>
         </div>
       </Layout>
     )
