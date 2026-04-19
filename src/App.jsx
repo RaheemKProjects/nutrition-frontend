@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings } from 'lucide-react'
+import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library } from 'lucide-react'
 import { Button } from './components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import {
@@ -98,7 +98,7 @@ function App() {
   }
 
   useEffect(() => {
-    if (screen === 'camera') {
+    if (screen === 'camera' || screen === 'home') {
       startCamera()
     }
     return () => stopCamera()
@@ -111,8 +111,24 @@ function App() {
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
+  const placeholderScreens = {
+    scanfood: { title: 'Scan Food', icon: ScanLine },
+    barcode: { title: 'Barcode Scanner', icon: ScanBarcode },
+    foodlabel: { title: 'Food Label', icon: FileText },
+    library: { title: 'Food Library', icon: Library },
+  }
+
+  const Layout = ({ children, activeTab, onTabClick }) => (
+    <div className="min-h-screen w-full bg-white flex flex-col">
+      <NavBar activeTab={activeTab} onTabClick={onTabClick} />
+      <div className="flex-1 flex flex-col">
+        {children}
+      </div>
+    </div>
+  )
+
   const NavBar = ({ activeTab, onTabClick }) => (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe z-50">
       <div className="flex justify-around py-2">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -132,64 +148,127 @@ function App() {
     </div>
   )
 
+  const PlaceholderScreen = ({ screenId }) => {
+    const screen = placeholderScreens[screenId]
+    const Icon = screen.icon
+    return (
+      <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
+          <Icon className="w-16 h-16 text-gray-400 mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">{screen.title}</h2>
+          <p className="text-gray-500 text-center">Coming soon...</p>
+        </div>
+      </Layout>
+    )
+  }
+
   if (screen === 'home') {
     return (
-      <div className="min-h-screen w-full bg-white flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">NutriSnap</h1>
-          <p className="text-gray-500 mb-8">Track your nutrition effortlessly</p>
+      <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
+        <div className="pt-16 md:pt-8">
+          <h1 className="text-2xl font-bold text-gray-800 p-6">Scanner</h1>
+        </div>
+        
+        <div className="relative mx-4 md:mx-8 lg:mx-16 rounded-2xl overflow-hidden bg-black h-48 md:h-64 lg:h-80 max-w-3xl mx-auto w-[calc(100%-2rem)]">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <canvas ref={canvasRef} className="hidden" />
+          <div className="absolute inset-0 bg-black/20" />
           <Button
-            size="lg"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6"
-            onClick={() => setScreen('camera')}
+            size="icon"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/90 hover:bg-white text-gray-800"
+            onClick={takePicture}
           >
-            <Camera className="w-6 h-6 mr-2" />
-            Scan Meal
+            <Camera className="w-6 h-6 md:w-8 md:h-8" />
           </Button>
         </div>
-        <NavBar activeTab="home" onTabClick={(id) => setScreen(id)} />
-      </div>
+        
+        <div className="flex-1 flex flex-col p-6">
+          <p className="text-gray-500 mb-6">Track your nutrition effortlessly</p>
+          
+          <div className="flex flex-row gap-2 md:gap-3 w-full max-w-2xl mx-auto">
+            <Button
+              variant="outline"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-300 hover:bg-green-500 hover:text-white hover:border-green-500"
+              onClick={() => setScreen('scanfood')}
+            >
+              <ScanLine className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="text-xs md:text-sm">Scan Food</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-300 hover:bg-green-500 hover:text-white hover:border-green-500"
+              onClick={() => setScreen('barcode')}
+            >
+              <ScanBarcode className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="text-xs md:text-sm">Barcode</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-300 hover:bg-green-500 hover:text-white hover:border-green-500"
+              onClick={() => setScreen('foodlabel')}
+            >
+              <FileText className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="text-xs md:text-sm">Food Label</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-300 hover:bg-green-500 hover:text-white hover:border-green-500"
+              onClick={() => setScreen('library')}
+            >
+              <Library className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="text-xs md:text-sm">Library</span>
+            </Button>
+          </div>
+        </div>
+      </Layout>
     )
   }
 
   if (screen === 'plan') {
     return (
-      <div className="min-h-screen w-full bg-white flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+      <Layout activeTab="plan" onTabClick={(id) => setScreen(id)}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
           <Calendar className="w-16 h-16 text-gray-400 mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Meal Plan</h2>
           <p className="text-gray-500 text-center">Coming soon...</p>
         </div>
-        <NavBar activeTab="plan" onTabClick={(id) => setScreen(id)} />
-      </div>
+      </Layout>
     )
   }
 
   if (screen === 'analysis') {
     return (
-      <div className="min-h-screen w-full bg-white flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+      <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
           <BarChart3 className="w-16 h-16 text-gray-400 mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Analysis</h2>
           <p className="text-gray-500 text-center">Coming soon...</p>
         </div>
-        <NavBar activeTab="analysis" onTabClick={(id) => setScreen(id)} />
-      </div>
+      </Layout>
     )
   }
 
   if (screen === 'settings') {
     return (
-      <div className="min-h-screen w-full bg-white flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+      <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
           <Settings className="w-16 h-16 text-gray-400 mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Settings</h2>
           <p className="text-gray-500 text-center">Coming soon...</p>
         </div>
-        <NavBar activeTab="settings" onTabClick={(id) => setScreen(id)} />
-      </div>
+      </Layout>
     )
   }
+
+  if (screen === 'scanfood') return <PlaceholderScreen screenId="scanfood" />
+  if (screen === 'barcode') return <PlaceholderScreen screenId="barcode" />
+  if (screen === 'foodlabel') return <PlaceholderScreen screenId="foodlabel" />
+  if (screen === 'library') return <PlaceholderScreen screenId="library" />
 
   if (screen === 'camera') {
     return (
