@@ -239,25 +239,43 @@ function App() {
   }
 
   const Layout = ({ children, activeTab, onTabClick }) => (
-    <div className="min-h-screen w-full bg-white flex flex-col">
-      <NavBar activeTab={activeTab} onTabClick={onTabClick} />
-      <div className="flex-1 flex flex-col">
+    <div className="min-h-screen w-full bg-black flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {children}
       </div>
+      <NavBar activeTab={activeTab} onTabClick={onTabClick} />
     </div>
   )
 
   const NavBar = ({ activeTab, onTabClick }) => (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe z-50">
-      <div className="flex justify-around py-2">
-        {navItems.map((item) => {
+    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 pb-safe z-50">
+      <div className="flex justify-around items-end py-2 h-20">
+        {navItems.map((item, index) => {
           const Icon = item.icon
           const isActive = activeTab === item.id
+          
+          if (index === 1) {
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onTabClick('home')
+                  setScreen('camera')
+                }}
+                className="flex flex-col items-center justify-center -mt-2"
+              >
+                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
+                  <Camera className="w-7 h-7 text-black" />
+                </div>
+              </button>
+            )
+          }
+          
           return (
             <button
               key={item.id}
               onClick={() => onTabClick(item.id)}
-              className={`flex flex-col items-center justify-center py-2 px-4 ${isActive ? 'text-blue-600' : 'text-gray-500'}`}
+              className={`flex flex-col items-center justify-center py-2 px-4 ${isActive ? 'text-white' : 'text-gray-500'}`}
             >
               <Icon className="w-6 h-6" />
               <span className="text-xs mt-1">{item.label}</span>
@@ -286,7 +304,7 @@ function App() {
     return (
       <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
         <div className="pt-16 md:pt-8">
-          <h1 className="text-2xl font-bold text-gray-800 p-6">Scanner</h1>
+          <h1 className="text-2xl font-bold text-white p-6">Scanner</h1>
         </div>
         
         <div className="relative mx-4 md:mx-8 lg:mx-16 rounded-2xl overflow-hidden bg-black h-48 md:h-64 lg:h-80 max-w-3xl mx-auto w-[calc(100%-2rem)]">
@@ -309,12 +327,12 @@ function App() {
         </div>
         
         <div className="flex-1 flex flex-col p-6">
-          <p className="text-gray-500 mb-6">Track your nutrition effortlessly</p>
+          <p className="text-gray-400 mb-6">Track your nutrition effortlessly</p>
           
           <div className="flex flex-row gap-2 md:gap-3 w-full max-w-2xl mx-auto">
             <Button
               variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-300 hover:bg-green-500 hover:text-white hover:border-green-500"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 text-white hover:bg-green-500 hover:text-white hover:border-green-500"
               onClick={() => setScreen('scanfood')}
             >
               <ScanLine className="w-5 h-5 md:w-6 md:h-6" />
@@ -322,7 +340,7 @@ function App() {
             </Button>
             <Button
               variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-300 hover:bg-green-500 hover:text-white hover:border-green-500"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 text-white hover:bg-green-500 hover:text-white hover:border-green-500"
               onClick={() => setScreen('barcode')}
             >
               <ScanBarcode className="w-5 h-5 md:w-6 md:h-6" />
@@ -330,7 +348,7 @@ function App() {
             </Button>
             <Button
               variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-300 hover:bg-green-500 hover:text-white hover:border-green-500"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 text-white hover:bg-green-500 hover:text-white hover:border-green-500"
               onClick={() => setScreen('foodlabel')}
             >
               <FileText className="w-5 h-5 md:w-6 md:h-6" />
@@ -338,7 +356,7 @@ function App() {
             </Button>
             <Button
               variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-300 hover:bg-green-500 hover:text-white hover:border-green-500"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 text-white hover:bg-green-500 hover:text-white hover:border-green-500"
               onClick={() => setScreen('library')}
             >
               <Library className="w-5 h-5 md:w-6 md:h-6" />
@@ -355,8 +373,8 @@ function App() {
       <Layout activeTab="plan" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
           <Calendar className="w-16 h-16 text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Meal Plan</h2>
-          <p className="text-gray-500 text-center">Coming soon...</p>
+          <h2 className="text-xl font-semibold text-white mb-2">Meal Plan</h2>
+          <p className="text-gray-400 text-center">Coming soon...</p>
         </div>
       </Layout>
     )
@@ -367,8 +385,8 @@ function App() {
       <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
           <BarChart3 className="w-16 h-16 text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Analysis</h2>
-          <p className="text-gray-500 text-center">Coming soon...</p>
+          <h2 className="text-xl font-semibold text-white mb-2">Analysis</h2>
+          <p className="text-gray-400 text-center">Coming soon...</p>
         </div>
       </Layout>
     )
@@ -378,18 +396,18 @@ function App() {
     return (
       <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
         <div className="pt-16 md:pt-8 p-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
+          <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
           
           <div className="space-y-4">
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h3 className="font-semibold text-gray-800 mb-3">Camera Access</h3>
+            <div className="bg-gray-900 rounded-xl p-4">
+              <h3 className="font-semibold text-white mb-3">Camera Access</h3>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Camera Permission</span>
+                  <span className="text-gray-400">Camera Permission</span>
                   <span className={`text-sm font-medium ${
-                    cameraPermission === 'granted' ? 'text-green-600' : 
-                    cameraPermission === 'denied' ? 'text-red-600' : 'text-yellow-600'
+                    cameraPermission === 'granted' ? 'text-green-400' : 
+                    cameraPermission === 'denied' ? 'text-red-400' : 'text-yellow-400'
                   }`}>
                     {cameraPermission === 'granted' ? 'Allowed' : 
                      cameraPermission === 'denied' ? 'Denied' : 'Not Set'}
@@ -407,7 +425,7 @@ function App() {
                 <Button
                   variant="outline"
                   onClick={checkCameraPermission}
-                  className="w-full"
+                  className="w-full border-gray-600 text-white"
                 >
                   Check Permission Status
                 </Button>
@@ -416,7 +434,7 @@ function App() {
                   <Button
                     variant="outline"
                     onClick={openSettings}
-                    className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                    className="w-full border-red-600 text-red-400 hover:bg-red-900/20"
                   >
                     <Settings className="w-5 h-5 mr-2" />
                     Open Device Settings
@@ -425,10 +443,10 @@ function App() {
               </div>
             </div>
             
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h3 className="font-semibold text-gray-800 mb-2">About</h3>
-              <p className="text-sm text-gray-500">NutriSnap v1.0.0</p>
-              <p className="text-sm text-gray-500 mt-1">Track your nutrition effortlessly</p>
+            <div className="bg-gray-900 rounded-xl p-4">
+              <h3 className="font-semibold text-white mb-2">About</h3>
+              <p className="text-sm text-gray-400">NutriSnap v1.0.0</p>
+              <p className="text-sm text-gray-400 mt-1">Track your nutrition effortlessly</p>
             </div>
           </div>
         </div>
