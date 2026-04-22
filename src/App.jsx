@@ -364,12 +364,133 @@ function App() {
   }
 
   if (screen === 'analysis') {
+    const stats = [
+      { label: 'Calories Today', value: '1,240', unit: 'kcal', goal: '/2000', color: 'text-orange-500' },
+      { label: 'Protein', value: '65', unit: 'g', goal: '/120g', color: 'text-red-500' },
+      { label: 'Carbs', value: '140', unit: 'g', goal: '/250g', color: 'text-amber-500' },
+      { label: 'Fat', value: '45', unit: 'g', goal: '/70g', color: 'text-yellow-500' },
+    ]
+    
+    const weeklyData = [
+      { day: 'Mon', calories: 1800 },
+      { day: 'Tue', calories: 2100 },
+      { day: 'Wed', calories: 1650 },
+      { day: 'Thu', calories: 1900 },
+      { day: 'Fri', calories: 2200 },
+      { day: 'Sat', calories: 2400 },
+      { day: 'Sun', calories: 1240 },
+    ]
+    
+    const maxCalorie = Math.max(...weeklyData.map(d => d.calories))
+    
     return (
       <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
-          <BarChart3 className="w-16 h-16 text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">Analysis</h2>
-          <p className="text-gray-400 text-center">Coming soon...</p>
+        <div className="flex-1 flex flex-col p-6 pt-16 overflow-y-auto">
+          <h1 className="text-2xl font-bold text-white mb-6">Analysis</h1>
+          
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {stats.map((stat, index) => (
+              <div key={index} className="bg-gray-900 rounded-xl p-4">
+                <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-2xl font-bold ${stat.color}`}>{stat.value}</span>
+                  <span className="text-sm text-gray-400">{stat.unit}</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">{stat.goal}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="bg-gray-900 rounded-xl p-4 mb-6">
+            <h3 className="text-white font-semibold mb-4">Weekly Calories</h3>
+            <div className="flex items-end justify-between h-32 gap-2">
+              {weeklyData.map((day, index) => (
+                <div key={index} className="flex flex-col items-center flex-1">
+                  <div 
+                    className="w-full bg-green-600 rounded-t transition-all"
+                    style={{ height: `${(day.calorie / maxCalorie) * 100}%` }}
+                  />
+                  <span className="text-xs text-gray-400 mt-2">{day.day}</span>
+                  <span className="text-xs text-gray-500">{day.calories}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="bg-gray-900 rounded-xl p-4 mb-6">
+            <h3 className="text-white font-semibold mb-3">Macro Breakdown</h3>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-400">Protein</span>
+                  <span className="text-white">65g</span>
+                </div>
+                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-red-500 rounded-full" style={{ width: '54%' }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-400">Carbs</span>
+                  <span className="text-white">140g</span>
+                </div>
+                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: '56%' }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-400">Fat</span>
+                  <span className="text-white">45g</span>
+                </div>
+                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-yellow-500 rounded-full" style={{ width: '64%' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gray-900 rounded-xl p-4">
+            <h3 className="text-white font-semibold mb-3">Recent Meals</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center py-2 border-b border-gray-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Flame className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm">Grilled Chicken</p>
+                    <p className="text-gray-500 text-xs">12:30 PM</p>
+                  </div>
+                </div>
+                <span className="text-orange-500 font-medium">450 kcal</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                    <Wheat className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm">Brown Rice</p>
+                    <p className="text-gray-500 text-xs">7:00 AM</p>
+                  </div>
+                </div>
+                <span className="text-amber-500 font-medium">320 kcal</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                    <Beef className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm">Salmon</p>
+                    <p className="text-gray-500 text-xs">6:30 PM</p>
+                  </div>
+                </div>
+                <span className="text-red-500 font-medium">470 kcal</span>
+              </div>
+            </div>
+          </div>
         </div>
       </Layout>
     )
