@@ -315,7 +315,7 @@ function App() {
           <div className="flex flex-row gap-2 md:gap-3 w-full max-w-2xl mx-auto">
             <Button
               variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 text-white hover:bg-green-500 hover:text-white hover:border-green-500"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 bg-white text-black hover:bg-green-500 hover:text-white hover:border-green-500"
               onClick={() => setScreen('scanfood')}
             >
               <ScanLine className="w-5 h-5 md:w-6 md:h-6" />
@@ -323,7 +323,7 @@ function App() {
             </Button>
             <Button
               variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 text-white hover:bg-green-500 hover:text-white hover:border-green-500"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 bg-white text-black hover:bg-green-500 hover:text-white hover:border-green-500"
               onClick={() => setScreen('barcode')}
             >
               <ScanBarcode className="w-5 h-5 md:w-6 md:h-6" />
@@ -331,7 +331,7 @@ function App() {
             </Button>
             <Button
               variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 text-white hover:bg-green-500 hover:text-white hover:border-green-500"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 bg-white text-black hover:bg-green-500 hover:text-white hover:border-green-500"
               onClick={() => setScreen('foodlabel')}
             >
               <FileText className="w-5 h-5 md:w-6 md:h-6" />
@@ -339,7 +339,7 @@ function App() {
             </Button>
             <Button
               variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 text-white hover:bg-green-500 hover:text-white hover:border-green-500"
+              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 bg-white text-black hover:bg-green-500 hover:text-white hover:border-green-500"
               onClick={() => setScreen('library')}
             >
               <Library className="w-5 h-5 md:w-6 md:h-6" />
