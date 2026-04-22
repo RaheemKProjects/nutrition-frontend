@@ -254,33 +254,6 @@ function App() {
           const Icon = item.icon
           const isActive = activeTab === item.id
           
-          if (index === 0) {
-            return (
-              <button
-                key={item.id}
-                onClick={() => onTabClick(item.id)}
-                className={`flex flex-col items-center justify-center py-2 px-3 ${isActive ? 'text-white' : 'text-gray-500'}`}
-              >
-                <Icon className="w-6 h-6" />
-                <span className="text-xs mt-1">{item.label}</span>
-              </button>
-            )
-          }
-          
-          if (index === 1) {
-            return (
-              <button
-                key="camera-btn"
-                onClick={() => setScreen('camera')}
-                className="flex flex-col items-center justify-center -mt-2"
-              >
-                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
-                  <Camera className="w-7 h-7 text-black" />
-                </div>
-              </button>
-            )
-          }
-          
           return (
             <button
               key={item.id}
