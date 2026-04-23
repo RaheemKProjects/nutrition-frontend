@@ -159,7 +159,7 @@ function App() {
     try {
       const base64Image = capturedImage.replace(/^data:image\/\w+;base64,/, '')
 
-      const response = await fetch('https://food-ai-app-ud2m.onrender.com', {
+      const response = await fetch('https://food-ai-app-ud2m.onrender.com/image-recognition', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
