@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library } from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 import { Button } from './components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import {
@@ -364,11 +365,33 @@ function App() {
   }
 
   if (screen === 'analysis') {
-    const stats = [
-      { label: 'Calories Today', value: '1,240', unit: 'kcal', goal: '/2000', color: 'text-orange-500' },
-      { label: 'Protein', value: '65', unit: 'g', goal: '/120g', color: 'text-red-500' },
-      { label: 'Carbs', value: '140', unit: 'g', goal: '/250g', color: 'text-amber-500' },
-      { label: 'Fat', value: '45', unit: 'g', goal: '/70g', color: 'text-yellow-500' },
+    const goals = {
+      calories: 2000,
+      protein: 120,
+      carbs: 250,
+      fat: 70
+    }
+    
+    const consumed = {
+      calories: 1240,
+      protein: 65,
+      carbs: 140,
+      fat: 45
+    }
+    
+    const remaining = {
+      calories: goals.calories - consumed.calories,
+      protein: goals.protein - consumed.protein,
+      carbs: goals.carbs - consumed.carbs,
+      fat: goals.fat - consumed.fat
+    }
+    
+    const dailyAverage = Math.round((1800 + 2100 + 1650 + 1900 + 2200 + 2400 + 1240) / 7)
+    
+    const macroData = [
+      { name: 'Protein', value: consumed.protein, color: '#ef4444' },
+      { name: 'Carbs', value: consumed.carbs, color: '#f59e0b' },
+      { name: 'Fat', value: consumed.fat, color: '#eab308' }
     ]
     
     const weeklyData = [
@@ -381,72 +404,141 @@ function App() {
       { day: 'Sun', calories: 1240 },
     ]
     
-    const maxCalorie = Math.max(...weeklyData.map(d => d.calories))
+    const insights = [
+      { title: 'High Protein Day', description: 'Protein intake is 54% of your daily goal. Consider adding more lean meats or legumes.', icon: Beef },
+      { title: 'Carb Balance', description: 'Carbs are well-balanced at 56% of goal. Keep up the good variety of whole grains.', icon: Wheat },
+      { title: 'Fat Monitoring', description: 'Fat intake is at 64% of daily limit. Watch for hidden fats in sauces and fried foods.', icon: Droplets },
+    ]
+    
+    const CustomTooltip = ({ active, payload }) => {
+      if (active && payload && payload.length) {
+        return (
+          <div className="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700">
+            <p className="text-white text-sm font-medium">{payload[0].value} kcal</p>
+          </div>
+        )
+      }
+      return null
+    }
     
     return (
       <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col p-6 pt-16 overflow-y-auto">
+        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
           <h1 className="text-2xl font-bold text-white mb-6">Analysis</h1>
           
           <div className="grid grid-cols-2 gap-3 mb-6">
-            {stats.map((stat, index) => (
-              <div key={index} className="bg-gray-900 rounded-xl p-4">
-                <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
-                <div className="flex items-baseline gap-1">
-                  <span className={`text-2xl font-bold ${stat.color}`}>{stat.value}</span>
-                  <span className="text-sm text-gray-400">{stat.unit}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">{stat.goal}</p>
-              </div>
-            ))}
-          </div>
-          
-          <div className="bg-gray-900 rounded-xl p-4 mb-6">
-            <h3 className="text-white font-semibold mb-4">Weekly Calories</h3>
-            <div className="flex items-end justify-between h-32 gap-2">
-              {weeklyData.map((day, index) => (
-                <div key={index} className="flex flex-col items-center flex-1">
-                  <div 
-                    className="w-full bg-green-600 rounded-t transition-all"
-                    style={{ height: `${(day.calorie / maxCalorie) * 100}%` }}
-                  />
-                  <span className="text-xs text-gray-400 mt-2">{day.day}</span>
-                  <span className="text-xs text-gray-500">{day.calories}</span>
-                </div>
-              ))}
+            <div className="bg-gray-900 rounded-xl p-4">
+              <p className="text-xs text-gray-400 mb-1">Calories Today</p>
+              <p className="text-2xl font-bold text-orange-500">{consumed.calories}</p>
+              <p className="text-xs text-gray-500">/ {goals.calories} kcal</p>
+            </div>
+            <div className="bg-gray-900 rounded-xl p-4">
+              <p className="text-xs text-gray-400 mb-1">Daily Average</p>
+              <p className="text-2xl font-bold text-blue-500">{dailyAverage}</p>
+              <p className="text-xs text-gray-500">kcal / day</p>
             </div>
           </div>
           
-          <div className="bg-gray-900 rounded-xl p-4 mb-6">
-            <h3 className="text-white font-semibold mb-3">Macro Breakdown</h3>
+          <div className="bg-gray-900 rounded-xl p-4 mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold">Food Remaining</h3>
+              <span className="text-xs text-gray-400">{Math.round((remaining.calories / goals.calories) * 100)}% left</span>
+            </div>
+            <div className="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
+              <div 
+                className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all" 
+                style={{ width: `${Math.min((remaining.calories / goals.calories) * 100, 100)}%` }} 
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="text-xs text-gray-500">Protein</p>
+                <p className="text-sm font-bold text-red-400">{remaining.protein}g</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Carbs</p>
+                <p className="text-sm font-bold text-amber-400">{remaining.carbs}g</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Fat</p>
+                <p className="text-sm font-bold text-yellow-400">{remaining.fat}g</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-gray-900 rounded-xl p-4">
+              <h3 className="text-white font-semibold text-sm mb-3">Macronutrients</h3>
+              <ResponsiveContainer width="100%" height={160}>
+                <PieChart>
+                  <Pie
+                    data={macroData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {macroData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    itemStyle={{ color: '#9ca3af' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-3 mt-2">
+                {macroData.map((item, index) => (
+                  <div key={index} className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-xs text-gray-400">{item.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-gray-900 rounded-xl p-4">
+              <h3 className="text-white font-semibold text-sm mb-3">Weekly Calories</h3>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                  <XAxis 
+                    dataKey="day" 
+                    tick={{ fill: '#6b7280', fontSize: 10 }} 
+                    axisLine={{ stroke: '#374151' }}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="calories" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+          <div className="bg-gray-900 rounded-xl p-4 mb-4">
+            <h3 className="text-white font-semibold mb-3">AI Nutritional Insights</h3>
             <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-400">Protein</span>
-                  <span className="text-white">65g</span>
-                </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-500 rounded-full" style={{ width: '54%' }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-400">Carbs</span>
-                  <span className="text-white">140g</span>
-                </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: '56%' }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-400">Fat</span>
-                  <span className="text-white">45g</span>
-                </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-yellow-500 rounded-full" style={{ width: '64%' }} />
-                </div>
-              </div>
+              {insights.map((insight, index) => {
+                const Icon = insight.icon
+                return (
+                  <div key={index} className="flex gap-3 p-3 bg-gray-800 rounded-lg">
+                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-white text-sm font-medium">{insight.title}</p>
+                      <p className="text-gray-400 text-xs mt-1">{insight.description}</p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
           
