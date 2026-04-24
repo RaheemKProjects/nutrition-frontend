@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library } from 'lucide-react'
+import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library, Scan } from 'lucide-react'
 import './Scanner.css'
 
 const Scanner = ({ user, onLogout, onNavigate }) => {
@@ -112,7 +112,9 @@ const Scanner = ({ user, onLogout, onNavigate }) => {
 
       {/* Floating Camera Capture Button */}
       <div className="fab-container">
-        <button className="fab-btn" onClick={handleCapture}>📷</button>
+        <button className="fab-btn" onClick={handleCapture}>
+          <Scan size={28} strokeWidth={2.5} />
+        </button>
       </div>
 
       {/* Bottom Navigation */}
