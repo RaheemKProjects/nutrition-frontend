@@ -3,6 +3,7 @@ import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple,
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
 import { Button } from './components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
+import Scanner from './Scanner'
 import {
   Drawer,
   DrawerContent,
@@ -478,69 +479,11 @@ function App() {
 
   if (screen === 'home') {
     return (
-      <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
-        <div className="pt-16 md:pt-8">
-          <h1 className="text-2xl font-bold text-white p-6">Scanner</h1>
-        </div>
-        
-        <div className="relative mx-4 md:mx-8 lg:mx-16 rounded-2xl overflow-hidden bg-black h-48 md:h-64 lg:h-80 max-w-3xl mx-auto w-[calc(100%-2rem)]">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <canvas ref={canvasRef} className="hidden" />
-          <div className="absolute inset-0 bg-black/20" />
-          <Button
-            size="icon"
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/90 hover:bg-white text-gray-800"
-            onClick={takePicture}
-          >
-            <Camera className="w-6 h-6 md:w-8 md:h-8" />
-          </Button>
-        </div>
-        
-        <div className="flex-1 flex flex-col p-6">
-          <p className="text-gray-400 mb-6">Track your nutrition effortlessly</p>
-          
-          <div className="flex flex-row gap-2 md:gap-3 w-full max-w-2xl mx-auto">
-            <Button
-              variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 bg-white text-black hover:bg-green-500 hover:text-white hover:border-green-500"
-              onClick={() => setScreen('scanfood')}
-            >
-              <ScanLine className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-xs md:text-sm">Scan Food</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 bg-white text-black hover:bg-green-500 hover:text-white hover:border-green-500"
-              onClick={() => setScreen('barcode')}
-            >
-              <ScanBarcode className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-xs md:text-sm">Barcode</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 bg-white text-black hover:bg-green-500 hover:text-white hover:border-green-500"
-              onClick={() => setScreen('foodlabel')}
-            >
-              <FileText className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-xs md:text-sm">Food Label</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 h-16 md:h-20 flex-col gap-1 md:gap-2 border-2 border-gray-700 bg-white text-black hover:bg-green-500 hover:text-white hover:border-green-500"
-              onClick={() => setScreen('library')}
-            >
-              <Library className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-xs md:text-sm">Library</span>
-            </Button>
-          </div>
-        </div>
-      </Layout>
+      <Scanner 
+        user={user} 
+        onLogout={handleLogout}
+        onNavigate={(screenId) => setScreen(screenId)}
+      />
     )
   }
 
