@@ -110,34 +110,35 @@ const Scanner = ({ user, onLogout, onNavigate }) => {
         </button>
       </div>
 
-      {/* Floating Camera Capture Button */}
-      <div className="fab-container">
-        <button className="fab-btn" onClick={handleCapture}>
-          <Scan size={28} strokeWidth={2.5} />
-        </button>
-      </div>
-
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation with curved cutout */}
       <nav className="bottom-nav">
         <button 
           className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
           onClick={() => handleNavClick('home')}
         >
-          <Home size={20} />
+          <Home size={22} />
           <span>Home</span>
         </button>
         <button 
           className={`nav-item ${activeNav === 'plan' ? 'active' : ''}`}
           onClick={() => handleNavClick('plan')}
         >
-          <Calendar size={20} />
+          <Calendar size={22} />
           <span>Plan</span>
         </button>
+        
+        {/* Scanner Button in center */}
+        <div className="fab-container">
+          <button className="fab-btn" onClick={handleCapture}>
+            <Scan size={28} strokeWidth={2.5} />
+          </button>
+        </div>
+        
         <button 
           className={`nav-item ${activeNav === 'analysis' ? 'active' : ''}`}
           onClick={() => handleNavClick('analysis')}
         >
-          <BarChart3 size={20} />
+          <BarChart3 size={22} />
           <span>Analysis</span>
         </button>
         <button 
