@@ -112,42 +112,46 @@ const Scanner = ({ user, onLogout, onNavigate }) => {
 
       {/* Bottom Navigation with curved cutout */}
       <nav className="bottom-nav">
-        <button 
-          className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
-          onClick={() => handleNavClick('home')}
-        >
-          <Home size={22} />
-          <span>Home</span>
-        </button>
-        <button 
-          className={`nav-item ${activeNav === 'plan' ? 'active' : ''}`}
-          onClick={() => handleNavClick('plan')}
-        >
-          <Calendar size={22} />
-          <span>Plan</span>
-        </button>
+        <div className="nav-left">
+          <button 
+            className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
+            onClick={() => handleNavClick('home')}
+          >
+            <Home size={22} />
+            <span>Home</span>
+          </button>
+          <button 
+            className={`nav-item ${activeNav === 'plan' ? 'active' : ''}`}
+            onClick={() => handleNavClick('plan')}
+          >
+            <Calendar size={22} />
+            <span>Plan</span>
+          </button>
+        </div>
         
-        {/* Scanner Button in center */}
+        {/* Scanner Button in center cutout */}
         <div className="fab-container">
           <button className="fab-btn" onClick={handleCapture}>
             <Scan size={28} strokeWidth={2.5} />
           </button>
         </div>
         
-        <button 
-          className={`nav-item ${activeNav === 'analysis' ? 'active' : ''}`}
-          onClick={() => handleNavClick('analysis')}
-        >
-          <BarChart3 size={22} />
-          <span>Analysis</span>
-        </button>
-        <button 
-          className={`nav-item ${activeNav === 'settings' ? 'active' : ''}`}
-          onClick={() => handleNavClick('settings')}
-        >
-          <Settings size={20} />
-          <span>Settings</span>
-        </button>
+        <div className="nav-right">
+          <button 
+            className={`nav-item ${activeNav === 'analysis' ? 'active' : ''}`}
+            onClick={() => handleNavClick('analysis')}
+          >
+            <BarChart3 size={22} />
+            <span>Analysis</span>
+          </button>
+          <button 
+            className={`nav-item ${activeNav === 'settings' ? 'active' : ''}`}
+            onClick={() => handleNavClick('settings')}
+          >
+            <Settings size={20} />
+            <span>Settings</span>
+          </button>
+        </div>
       </nav>
     </div>
   )
