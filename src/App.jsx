@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library } from 'lucide-react'
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts'
+import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library, User, Lock, Mail, ArrowRight, LogOut } from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
 import { Button } from './components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import {
@@ -39,9 +39,193 @@ function App() {
   const [capturedImage, setCapturedImage] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(true)
   const [cameraPermission, setCameraPermission] = useState('prompt')
+  
+  const [user, setUser] = useState(null)
+  const [authMode, setAuthMode] = useState('login')
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authName, setAuthName] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
+  
+  useEffect(() => {
+    const savedUser = localStorage.getItem('nutrisnap_user')
+    if (savedUser) {
+      setUser(JSON.parse(savedUser))
+    }
+  }, [])
+  
+  const handleRegister = () => {
+    setAuthLoading(true)
+    setAuthError('')
+    
+    setTimeout(() => {
+      if (!authEmail || !authPassword || !authName) {
+        setAuthError('Please fill in all fields')
+        setAuthLoading(false)
+        return
+      }
+      
+      if (!authEmail.includes('@')) {
+        setAuthError('Please enter a valid email')
+        setAuthLoading(false)
+        return
+      }
+      
+      if (authPassword.length < 6) {
+        setAuthError('Password must be at least 6 characters')
+        setAuthLoading(false)
+        return
+      }
+      
+      const users = JSON.parse(localStorage.getItem('nutrisnap_users') || '[]')
+      
+      if (users.find(u => u.email === authEmail)) {
+        setAuthError('Email already registered')
+        setAuthLoading(false)
+        return
+      }
+      
+      const newUser = {
+        id: Date.now(),
+        name: authName,
+        email: authEmail,
+        password: authPassword,
+        createdAt: new Date().toISOString()
+      }
+      
+      users.push(newUser)
+      localStorage.setItem('nutrisnap_users', JSON.stringify(users))
+      
+      localStorage.setItem('nutrisnap_user', JSON.stringify(newUser))
+      setUser(newUser)
+      setAuthLoading(false)
+      setScreen('home')
+    }, 1000)
+  }
+  
+  const handleLogin = () => {
+    setAuthLoading(true)
+    setAuthError('')
+    
+    setTimeout(() => {
+      if (!authEmail || !authPassword) {
+        setAuthError('Please enter email and password')
+        setAuthLoading(false)
+        return
+      }
+      
+      const users = JSON.parse(localStorage.getItem('nutrisnap_users') || '[]')
+      const foundUser = users.find(u => u.email === authEmail && u.password === authPassword)
+      
+      if (!foundUser) {
+        setAuthError('Invalid email or password')
+        setAuthLoading(false)
+        return
+      }
+      
+      localStorage.setItem('nutrisnap_user', JSON.stringify(foundUser))
+      setUser(foundUser)
+      setAuthLoading(false)
+      setScreen('home')
+    }, 1000)
+  }
+  
+  const handleLogout = () => {
+    localStorage.removeItem('nutrisnap_user')
+    setUser(null)
+    setAuthEmail('')
+    setAuthPassword('')
+    setAuthName('')
+    setScreen('login')
+  }
+  
+  const AuthScreen = () => (
+    <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">NutriSnap</h1>
+          <p className="text-gray-400">
+            {authMode === 'login' ? 'Welcome back!' : 'Create your account'}
+          </p>
+        </div>
+        
+        <div className="bg-gray-900 rounded-xl p-6 space-y-4">
+          {authMode === 'register' && (
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={authName}
+                onChange={(e) => setAuthName(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+              />
+            </div>
+          )}
+          
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <input
+              type="email"
+              placeholder="Email"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+            />
+          </div>
+          
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <input
+              type="password"
+              placeholder="Password"
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+            />
+          </div>
+          
+          {authError && (
+            <p className="text-red-500 text-sm text-center">{authError}</p>
+          )}
+          
+          <Button
+            onClick={authMode === 'login' ? handleLogin : handleRegister}
+            disabled={authLoading}
+            className="w-full bg-green-600 hover:bg-green-700 py-3"
+          >
+            {authLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                {authMode === 'login' ? 'Sign In' : 'Create Account'}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
+          </Button>
+          
+          <div className="text-center pt-4">
+            <button
+              onClick={() => {
+                setAuthMode(authMode === 'login' ? 'register' : 'login')
+                setAuthError('')
+              }}
+              className="text-gray-400 text-sm hover:text-white"
+            >
+              {authMode === 'login' 
+                ? "Don't have an account? Sign up" 
+                : 'Already have an account? Sign in'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
   const checkCameraSupport = () => {
     try {
@@ -223,7 +407,15 @@ function App() {
       startCamera()
     }
     return () => stopCamera()
-  }, [screen])
+}, [screen])
+
+  if (screen === 'login') {
+    return <AuthScreen />
+  }
+
+  if (screen === 'register') {
+    return <AuthScreen />
+  }
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -591,10 +783,30 @@ function App() {
   if (screen === 'settings') {
     return (
       <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
-        <div className="pt-16 md:pt-8 p-6">
+        <div className="pt-16 md:pt-8 p-6 overflow-y-auto">
           <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
           
           <div className="space-y-4">
+            <div className="bg-gray-900 rounded-xl p-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">{user?.name}</h3>
+                  <p className="text-gray-400 text-sm">{user?.email}</p>
+                </div>
+              </div>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full border-red-600 text-red-400 hover:bg-red-900/20"
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+            
             <div className="bg-gray-900 rounded-xl p-4">
               <h3 className="font-semibold text-white mb-3">Camera Access</h3>
               
