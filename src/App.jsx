@@ -57,8 +57,8 @@ function App() {
   })
   
   const [meals, setMeals] = useState([
-    { id: 1, name: 'Breakfast', items: [{ name: 'Oatmeal', calories: 150, protein: 5, carbs: 27, fat: 3 }] },
-    { id: 2, name: 'Lunch', items: [{ name: 'Grilled Chicken', calories: 350, protein: 40, carbs: 20, fat: 12 }] },
+    { id: 1, name: 'Breakfast', items: [] },
+    { id: 2, name: 'Lunch', items: [] },
     { id: 3, name: 'Dinner', items: [] },
     { id: 4, name: 'Snacks', items: [] }
   ])
@@ -561,8 +561,8 @@ function App() {
           <div className="bg-gray-900 rounded-xl p-4 mb-4">
             <h3 className="text-white font-semibold mb-3">This Week</h3>
             <div className="flex justify-between gap-1">
-              {days.map((day, index) => {
-                const dayCalories = [1800, 2100, 1650, 1900, 2200, 2400, 1240][index]
+              {days.map((day) => {
+                const dayCalories = 0
                 const percentage = Math.min((dayCalories / dietGoals.calories) * 100, 100)
                 return (
                   <div key={day} className="flex flex-col items-center flex-1">
@@ -676,28 +676,31 @@ function App() {
   }
 
   if (screen === 'analysis') {
-    const goals = {
-      calories: 2000,
-      protein: 120,
-      carbs: 250,
-      fat: 70
-    }
+    const totalConsumed = meals.reduce((sum, meal) => 
+      sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
+    const totalProtein = meals.reduce((sum, meal) => 
+      sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
+    const totalCarbs = meals.reduce((sum, meal) => 
+      sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
+    const totalFat = meals.reduce((sum, meal) => 
+      sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
     
     const consumed = {
-      calories: 1240,
-      protein: 65,
-      carbs: 140,
-      fat: 45
+      calories: totalConsumed,
+      protein: totalProtein,
+      carbs: totalCarbs,
+      fat: totalFat
     }
     
     const remaining = {
-      calories: goals.calories - consumed.calories,
-      protein: goals.protein - consumed.protein,
-      carbs: goals.carbs - consumed.carbs,
-      fat: goals.fat - consumed.fat
+      calories: dietGoals.calories - consumed.calories,
+      protein: dietGoals.protein - consumed.protein,
+      carbs: dietGoals.carbs - consumed.carbs,
+      fat: dietGoals.fat - consumed.fat
     }
     
-    const dailyAverage = Math.round((1800 + 2100 + 1650 + 1900 + 2200 + 2400 + 1240) / 7)
+    const weeklyCalories = weeklyData.map(d => d.calories)
+    const dailyAverage = weeklyCalories.reduce((a, b) => a + b, 0) / 7
     
     const macroData = [
       { name: 'Protein', value: consumed.protein, color: '#ef4444' },
@@ -706,19 +709,19 @@ function App() {
     ]
     
     const weeklyData = [
-      { day: 'Mon', calories: 1800 },
-      { day: 'Tue', calories: 2100 },
-      { day: 'Wed', calories: 1650 },
-      { day: 'Thu', calories: 1900 },
-      { day: 'Fri', calories: 2200 },
-      { day: 'Sat', calories: 2400 },
-      { day: 'Sun', calories: 1240 },
+      { day: 'Mon', calories: 0 },
+      { day: 'Tue', calories: 0 },
+      { day: 'Wed', calories: 0 },
+      { day: 'Thu', calories: 0 },
+      { day: 'Fri', calories: 0 },
+      { day: 'Sat', calories: 0 },
+      { day: 'Sun', calories: 0 },
     ]
     
     const insights = [
-      { title: 'High Protein Day', description: 'Protein intake is 54% of your daily goal. Consider adding more lean meats or legumes.', icon: Beef },
-      { title: 'Carb Balance', description: 'Carbs are well-balanced at 56% of goal. Keep up the good variety of whole grains.', icon: Wheat },
-      { title: 'Fat Monitoring', description: 'Fat intake is at 64% of daily limit. Watch for hidden fats in sauces and fried foods.', icon: Droplets },
+      { title: 'Start Tracking', description: 'Add meals to your plan to get personalized nutrition insights.', icon: Beef },
+      { title: 'Set Goals', description: 'Use the Set Goals button on the Plan page to customize your daily targets.', icon: Wheat },
+      { title: 'Track Progress', description: 'Monitor your daily calorie and macro intake on this Analysis page.', icon: Droplets },
     ]
     
     const CustomTooltip = ({ active, payload }) => {
