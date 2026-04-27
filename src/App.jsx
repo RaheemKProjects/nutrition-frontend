@@ -699,15 +699,6 @@ function App() {
       fat: dietGoals.fat - consumed.fat
     }
     
-    const weeklyCalories = weeklyData.map(d => d.calories)
-    const dailyAverage = weeklyCalories.reduce((a, b) => a + b, 0) / 7
-    
-    const macroData = [
-      { name: 'Protein', value: consumed.protein, color: '#ef4444' },
-      { name: 'Carbs', value: consumed.carbs, color: '#f59e0b' },
-      { name: 'Fat', value: consumed.fat, color: '#eab308' }
-    ]
-    
     const weeklyData = [
       { day: 'Mon', calories: 0 },
       { day: 'Tue', calories: 0 },
@@ -716,6 +707,15 @@ function App() {
       { day: 'Fri', calories: 0 },
       { day: 'Sat', calories: 0 },
       { day: 'Sun', calories: 0 },
+    ]
+    
+    const weeklyCalories = weeklyData.map(d => d.calories)
+    const dailyAverage = weeklyCalories.reduce((a, b) => a + b, 0) / 7
+    
+    const macroData = [
+      { name: 'Protein', value: consumed.protein, color: '#ef4444' },
+      { name: 'Carbs', value: consumed.carbs, color: '#f59e0b' },
+      { name: 'Fat', value: consumed.fat, color: '#eab308' }
     ]
     
     const insights = [
