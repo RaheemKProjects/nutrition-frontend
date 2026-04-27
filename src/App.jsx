@@ -744,7 +744,7 @@ function App() {
             <div className="bg-gray-900 rounded-xl p-4">
               <p className="text-xs text-gray-400 mb-1">Calories Today</p>
               <p className="text-2xl font-bold text-orange-500">{consumed.calories}</p>
-              <p className="text-xs text-gray-500">/ {goals.calories} kcal</p>
+              <p className="text-xs text-gray-500">/ {dietGoals.calories} kcal</p>
             </div>
             <div className="bg-gray-900 rounded-xl p-4">
               <p className="text-xs text-gray-400 mb-1">Daily Average</p>
@@ -756,7 +756,7 @@ function App() {
           <div className="bg-gray-900 rounded-xl p-4 mb-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-semibold">Food Remaining</h3>
-              <span className="text-xs text-gray-400">{Math.round((remaining.calories / goals.calories) * 100)}% left</span>
+              <span className="text-xs text-gray-400">{Math.round((remaining.calories / dietGoals.calories) * 100)}% left</span>
             </div>
             <div className="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
               <div 
