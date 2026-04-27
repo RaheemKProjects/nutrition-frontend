@@ -830,7 +830,7 @@ function App() {
                     tickLine={false}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="calories" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="calories" fill="#0F2C5C" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

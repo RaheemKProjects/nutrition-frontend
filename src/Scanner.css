@@ -126,7 +126,7 @@
 }
 
 .scanner-page .mode-btn.active {
-  background: #AACC00;
+  background: #0F2C5C;
   color: white;
 }
 
@@ -147,14 +147,14 @@
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  background: #FF6B5B;
+  background: #0F2C5C;
   border: 3px solid #151515;
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(255, 107, 91, 0.5);
+  box-shadow: 0 4px 20px rgba(15, 44, 92, 0.5);
   transition: transform 0.2s ease;
 }
 
