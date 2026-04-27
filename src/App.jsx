@@ -49,6 +49,23 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
   
+  const [dietGoals, setDietGoals] = useState({
+    calories: 2000,
+    protein: 120,
+    carbs: 250,
+    fat: 70
+  })
+  
+  const [meals, setMeals] = useState([
+    { id: 1, name: 'Breakfast', items: [{ name: 'Oatmeal', calories: 150, protein: 5, carbs: 27, fat: 3 }] },
+    { id: 2, name: 'Lunch', items: [{ name: 'Grilled Chicken', calories: 350, protein: 40, carbs: 20, fat: 12 }] },
+    { id: 3, name: 'Dinner', items: [] },
+    { id: 4, name: 'Snacks', items: [] }
+  ])
+  
+  const [showGoalModal, setShowGoalModal] = useState(false)
+  const [newGoal, setNewGoal] = useState({ ...dietGoals })
+  
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
@@ -486,25 +503,8 @@ function App() {
       />
     )
 }
-  
+   
   if (screen === 'plan') {
-    const [dietGoals, setDietGoals] = useState({
-      calories: 2000,
-      protein: 120,
-      carbs: 250,
-      fat: 70
-    })
-    
-    const [meals, setMeals] = useState([
-      { id: 1, name: 'Breakfast', items: [{ name: 'Oatmeal', calories: 150, protein: 5, carbs: 27, fat: 3 }] },
-      { id: 2, name: 'Lunch', items: [{ name: 'Grilled Chicken', calories: 350, protein: 40, carbs: 20, fat: 12 }] },
-      { id: 3, name: 'Dinner', items: [] },
-      { id: 4, name: 'Snacks', items: [] }
-    ])
-    
-    const [showGoalModal, setShowGoalModal] = useState(false)
-    const [newGoal, setNewGoal] = useState({ ...dietGoals })
-    
     const totalCalories = meals.reduce((sum, meal) => 
       sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
     const totalProtein = meals.reduce((sum, meal) => 
