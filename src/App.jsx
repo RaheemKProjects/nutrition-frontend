@@ -57,10 +57,10 @@ function App() {
   })
   
   const [meals, setMeals] = useState([
-    { id: 1, name: 'Breakfast', items: [] },
-    { id: 2, name: 'Lunch', items: [] },
-    { id: 3, name: 'Dinner', items: [] },
-    { id: 4, name: 'Snacks', items: [] }
+    { id: 1, name: 'Breakfast', items: [{ name: 'Oatmeal', calories: 150, protein: 5, carbs: 27, fat: 3 }, { name: 'Banana', calories: 105, protein: 1, carbs: 27, fat: 0 }] },
+    { id: 2, name: 'Lunch', items: [{ name: 'Grilled Chicken', calories: 350, protein: 40, carbs: 20, fat: 12 }, { name: 'Brown Rice', calories: 216, protein: 5, carbs: 45, fat: 2 }] },
+    { id: 3, name: 'Dinner', items: [{ name: 'Salmon', calories: 400, protein: 45, carbs: 0, fat: 22 }] },
+    { id: 4, name: 'Snacks', items: [{ name: 'Apple', calories: 95, protein: 0, carbs: 25, fat: 0 }] }
   ])
   
   const [showGoalModal, setShowGoalModal] = useState(false)
@@ -561,8 +561,8 @@ function App() {
           <div className="bg-gray-900 rounded-xl p-4 mb-4">
             <h3 className="text-white font-semibold mb-3">This Week</h3>
             <div className="flex justify-between gap-1">
-              {days.map((day) => {
-                const dayCalories = 0
+              {days.map((day, index) => {
+                const dayCalories = [1850, 2100, 1650, 1920, 2200, 2400, 1316][index]
                 const percentage = Math.min((dayCalories / dietGoals.calories) * 100, 100)
                 return (
                   <div key={day} className="flex flex-col items-center flex-1">
@@ -700,13 +700,13 @@ function App() {
     }
     
     const weeklyData = [
-      { day: 'Mon', calories: 0 },
-      { day: 'Tue', calories: 0 },
-      { day: 'Wed', calories: 0 },
-      { day: 'Thu', calories: 0 },
-      { day: 'Fri', calories: 0 },
-      { day: 'Sat', calories: 0 },
-      { day: 'Sun', calories: 0 },
+      { day: 'Mon', calories: 1850 },
+      { day: 'Tue', calories: 2100 },
+      { day: 'Wed', calories: 1650 },
+      { day: 'Thu', calories: 1920 },
+      { day: 'Fri', calories: 2200 },
+      { day: 'Sat', calories: 2400 },
+      { day: 'Sun', calories: 1316 },
     ]
     
     const weeklyCalories = weeklyData.map(d => d.calories)
