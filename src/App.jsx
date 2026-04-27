@@ -761,7 +761,7 @@ function App() {
             <div className="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
               <div 
                 className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all" 
-                style={{ width: `${Math.min((remaining.calories / goals.calories) * 100, 100)}%` }} 
+                style={{ width: `${Math.min((remaining.calories / dietGoals.calories) * 100, 100)}%` }} 
               />
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
