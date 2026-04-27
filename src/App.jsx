@@ -181,7 +181,7 @@ function App() {
                 placeholder="Full Name"
                 value={authName}
                 onChange={(e) => setAuthName(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#0F2C5C]"
               />
             </div>
           )}
@@ -193,7 +193,7 @@ function App() {
               placeholder="Email"
               value={authEmail}
               onChange={(e) => setAuthEmail(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#0F2C5C]"
             />
           </div>
           
@@ -204,7 +204,7 @@ function App() {
               placeholder="Password"
               value={authPassword}
               onChange={(e) => setAuthPassword(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#0F2C5C]"
             />
           </div>
           
@@ -215,7 +215,7 @@ function App() {
           <Button
             onClick={authMode === 'login' ? handleLogin : handleRegister}
             disabled={authLoading}
-            className="w-full bg-green-600 hover:bg-green-700 py-3"
+            className="w-full bg-[#0F2C5C] hover:bg-[#0a2349] py-3"
           >
             {authLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -523,7 +523,7 @@ function App() {
             <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
             <button 
               onClick={() => setShowGoalModal(true)}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium"
             >
               Set Goals
             </button>
@@ -537,7 +537,7 @@ function App() {
             </div>
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
               <div 
-                className="h-full bg-green-500 rounded-full transition-all" 
+                className="h-full bg-[#0F2C5C] rounded-full transition-all" 
                 style={{ width: `${Math.min((totalCalories / dietGoals.calories) * 100, 100)}%` }}
               />
             </div>
@@ -568,7 +568,7 @@ function App() {
                   <div key={day} className="flex flex-col items-center flex-1">
                     <div className="w-8 h-20 bg-gray-800 rounded-lg relative overflow-hidden">
                       <div 
-                        className="absolute bottom-0 w-full bg-green-500 rounded-lg transition-all"
+                        className="absolute bottom-0 w-full bg-[#0F2C5C] rounded-lg transition-all"
                         style={{ height: `${percentage}%` }}
                       />
                     </div>
@@ -595,14 +595,14 @@ function App() {
                     {meal.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
                         <span className="text-gray-300">{item.name}</span>
-                        <span className="text-green-400">{item.calories} kcal</span>
+                        <span className="text-[#0F2C5C]">{item.calories} kcal</span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm">No items added yet</p>
                 )}
-                <button className="mt-2 text-green-500 text-sm font-medium">+ Add Food</button>
+                <button className="mt-2 text-[#0F2C5C] text-sm font-medium">+ Add Food</button>
               </div>
             ))}
           </div>
@@ -663,7 +663,7 @@ function App() {
                     setDietGoals(newGoal)
                     setShowGoalModal(false)
                   }}
-                  className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium"
+                  className="flex-1 bg-[#0F2C5C] text-white py-2 rounded-lg font-medium"
                 >
                   Save
                 </button>
@@ -748,7 +748,7 @@ function App() {
             </div>
             <div className="bg-gray-900 rounded-xl p-4">
               <p className="text-xs text-gray-400 mb-1">Daily Average</p>
-              <p className="text-2xl font-bold text-blue-500">{dailyAverage}</p>
+              <p className="text-2xl font-bold text-[#0F2C5C]">{dailyAverage}</p>
               <p className="text-xs text-gray-500">kcal / day</p>
             </div>
           </div>
@@ -760,7 +760,7 @@ function App() {
             </div>
             <div className="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
               <div 
-                className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all" 
+                className="h-full bg-gradient-to-r from-[#0F2C5C] to-[#0F2C5C] rounded-full transition-all" 
                 style={{ width: `${Math.min((remaining.calories / dietGoals.calories) * 100, 100)}%` }} 
               />
             </div>
@@ -843,8 +843,8 @@ function App() {
                 const Icon = insight.icon
                 return (
                   <div key={index} className="flex gap-3 p-3 bg-gray-800 rounded-lg">
-                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
-                      <Icon className="w-5 h-5 text-green-500" />
+                    <div className="w-10 h-10 bg-[#0F2C5C]/20 rounded-lg flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-[#0F2C5C]" />
                     </div>
                     <div>
                       <p className="text-white text-sm font-medium">{insight.title}</p>
@@ -911,7 +911,7 @@ function App() {
           <div className="space-y-4">
             <div className="bg-gray-900 rounded-xl p-4">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-[#0F2C5C] rounded-full flex items-center justify-center">
                   <User className="w-8 h-8 text-white" />
                 </div>
                 <div>
@@ -936,7 +936,7 @@ function App() {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400">Camera Permission</span>
                   <span className={`text-sm font-medium ${
-                    cameraPermission === 'granted' ? 'text-green-400' : 
+                    cameraPermission === 'granted' ? 'text-[#0F2C5C]' : 
                     cameraPermission === 'denied' ? 'text-red-400' : 'text-yellow-400'
                   }`}>
                     {cameraPermission === 'granted' ? 'Allowed' : 
@@ -946,7 +946,7 @@ function App() {
                 
                 <Button
                   onClick={requestCameraAccess}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-[#0F2C5C] hover:bg-[#0a2349]"
                 >
                   <Camera className="w-5 h-5 mr-2" />
                   Request Camera Access
@@ -1041,7 +1041,7 @@ function App() {
             </Button>
             <Button
               size="lg"
-              className="bg-green-500 hover:bg-green-600 text-white px-8"
+              className="bg-[#0F2C5C] hover:bg-[#0a2349] text-white px-8"
               onClick={confirmPicture}
             >
               <Check className="w-5 h-5 mr-2" />
@@ -1131,7 +1131,7 @@ function App() {
                 {mockNutritionData.nutrients.map((nutrient, index) => (
                   <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                     <div className="flex items-center gap-2">
-                      <Apple className="w-4 h-4 text-green-500" />
+                      <Apple className="w-4 h-4 text-[#0F2C5C]" />
                       <span className="text-sm text-gray-600">{nutrient.name}</span>
                     </div>
                     <div className="text-right">

@@ -19,7 +19,7 @@
   --color-destructive-foreground: oklch(0.577 0.245 27.325);
   --color-border: oklch(0.922 0 0);
   --color-input: oklch(0.922 0 0);
-  --color-ring: oklch(0.708 0 0);
+  --color-ring: oklch(0.26 0.15 250);
   --radius: 0.625rem;
 }
 
