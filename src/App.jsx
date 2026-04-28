@@ -1081,9 +1081,9 @@ function App() {
             </DrawerHeader>
             <div className="px-4 pb-4">
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <Card className="bg-orange-50 border-orange-200">
+                <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-orange-600 mb-1">
+                    <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
                       <Flame className="w-4 h-4" />
                       <span className="text-xs font-medium">Calories</span>
                     </div>
@@ -1092,9 +1092,9 @@ function App() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-red-50 border-red-200">
+                <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-red-600 mb-1">
+                    <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
                       <Beef className="w-4 h-4" />
                       <span className="text-xs font-medium">Protein</span>
                     </div>
@@ -1103,9 +1103,9 @@ function App() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-amber-50 border-amber-200">
+                <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-amber-600 mb-1">
+                    <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
                       <Wheat className="w-4 h-4" />
                       <span className="text-xs font-medium">Carbs</span>
                     </div>
@@ -1114,9 +1114,9 @@ function App() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-yellow-50 border-yellow-200">
+                <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-yellow-600 mb-1">
+                    <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
                       <Droplets className="w-4 h-4" />
                       <span className="text-xs font-medium">Fat</span>
                     </div>
