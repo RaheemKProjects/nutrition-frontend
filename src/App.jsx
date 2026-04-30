@@ -553,12 +553,6 @@ function App() {
     return (
       <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
-          <Scanner 
-            user={user} 
-            onLogout={handleLogout}
-            onNavigate={(screenId) => setScreen(screenId)}
-          />
-          
           <h1 className="text-2xl font-bold text-white mb-6 mt-4">Analysis</h1>
           
           <div className="grid grid-cols-2 gap-3 mb-6">
