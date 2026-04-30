@@ -741,7 +741,7 @@ if (screen === 'analysis') {
           </div>
           
           {showPlanScanner && (
-            <div className="fixed inset-0 z-50 bg-black">
+            <div className="fixed inset-0 z-[100] bg-black flex flex-col">
               <Scanner 
                 user={user} 
                 onLogout={handleLogout}

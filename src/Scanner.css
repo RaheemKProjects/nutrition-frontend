@@ -10,12 +10,14 @@
   overflow: visible;
   font-family: 'Inter', sans-serif;
   color: white;
+  padding-bottom: 80px;
 }
 
 .scanner-page.embedded {
   height: auto;
   max-width: 100%;
   background: transparent;
+  padding-bottom: 0;
 }
 
 .scanner-header {
@@ -140,22 +142,23 @@
   bottom: 28px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: 100;
 }
 
 .scanner-page .fab-btn {
-  width: 58px;
-  height: 58px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border: none;
+  border: 3px solid white;
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px var(--primary-glow);
+  box-shadow: 0 4px 20px var(--primary-glow), 0 0 30px rgba(37, 99, 235, 0.5);
   transition: transform 0.2s ease;
+  font-size: 28px;
 }
 
 .scanner-page .fab-btn:active {
@@ -168,8 +171,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 10px 8px 0;
-  height: 68px;
+  padding: 10px 8px 20px;
+  height: 80px;
   background: var(--bg-card);
   border-top: 1px solid var(--border);
   border-radius: 30px 30px 0 0;
