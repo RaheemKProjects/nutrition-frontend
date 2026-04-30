@@ -64,6 +64,7 @@ function App() {
   ])
   
   const [showGoalModal, setShowGoalModal] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
   const [newGoal, setNewGoal] = useState({ ...dietGoals })
   
   const videoRef = useRef(null)
@@ -521,13 +522,36 @@ function App() {
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
-            <button 
-              onClick={() => setShowGoalModal(true)}
-              className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium"
-            >
-              Set Goals
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setShowScanner(true)}
+                className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1"
+              >
+                <Camera className="w-4 h-4" />
+                Scan Food
+              </button>
+              <button 
+                onClick={() => setShowGoalModal(true)}
+                className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Set Goals
+              </button>
+            </div>
           </div>
+          
+          {/* Scanner Overlay */}
+          {showScanner && (
+            <div className="fixed inset-0 z-50 bg-black">
+              <Scanner 
+                user={user} 
+                onLogout={handleLogout}
+                onNavigate={(screenId) => {
+                  if (screenId) setScreen(screenId)
+                }}
+                onClose={() => setShowScanner(false)}
+              />
+            </div>
+          )}
           
           {/* Daily Progress */}
           <div className="bg-gray-900 rounded-xl p-4 mb-4">

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library, Scan } from 'lucide-react'
 import './Scanner.css'
 
-const Scanner = ({ user, onLogout, onNavigate, embedded }) => {
+const Scanner = ({ user, onLogout, onNavigate, onClose }) => {
   const [activeMode, setActiveMode] = useState('scan')
   const [activeNav, setActiveNav] = useState('home')
   const videoRef = useRef(null)
@@ -52,16 +52,16 @@ const Scanner = ({ user, onLogout, onNavigate, embedded }) => {
   }
 
   return (
-    <div className={`scanner-page ${embedded ? 'embedded' : ''}`}>
-      {!embedded && (
-        <>
-          {/* Header */}
-          <div className="scanner-header">
-            <h1>Scanner</h1>
-            <button className="menu-btn" onClick={() => onNavigate('settings')}>•••</button>
-          </div>
-        </>
-      )}
+    <div className="scanner-page">
+      {/* Header with close button */}
+      <div className="scanner-header">
+        {onClose ? (
+          <button className="menu-btn" onClick={onClose}>✕</button>
+        ) : (
+          <h1>Scanner</h1>
+        )}
+        {!onClose && <button className="menu-btn" onClick={() => onNavigate('settings')}>•••</button>}
+      </div>
 
       {/* Camera Viewfinder */}
       <div className="viewfinder-container">
@@ -114,8 +114,7 @@ const Scanner = ({ user, onLogout, onNavigate, embedded }) => {
         </button>
       </div>
 
-      {!embedded && (
-        <nav className="bottom-nav">
+      <nav className="bottom-nav">
         <div className="nav-left">
           <button 
             className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
@@ -155,9 +154,8 @@ const Scanner = ({ user, onLogout, onNavigate, embedded }) => {
             <Settings size={20} />
             <span>Settings</span>
           </button>
-        </div>
-</nav>
-        )}
+</div>
+      </nav>
     </div>
   )
 }
