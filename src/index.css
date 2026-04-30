@@ -1,25 +1,44 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-base: #0a0e1a;
+  --bg-card: #111827;
+  --bg-card-secondary: #1a2235;
+  --primary: #2563eb;
+  --primary-bright: #3b82f6;
+  --primary-glow: rgba(37, 99, 235, 0.25);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.3);
+  --macro-protein: #ff6b6b;
+  --macro-carbs: #ff9500;
+  --macro-fat: #ffd60a;
+  --danger: #ef4444;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-active: rgba(59, 130, 246, 0.5);
+}
 
 @theme {
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.145 0 0);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.145 0 0);
-  --color-primary: oklch(0.26 0.15 250);
-  --color-primary-foreground: oklch(0.985 0 0);
-  --color-secondary: oklch(0.97 0 0);
-  --color-secondary-foreground: oklch(0.205 0 0);
-  --color-muted: oklch(0.97 0 0);
-  --color-muted-foreground: oklch(0.556 0 0);
-  --color-accent: oklch(0.97 0 0);
-  --color-accent-foreground: oklch(0.205 0 0);
-  --color-destructive: oklch(0.577 0.245 27.325);
-  --color-destructive-foreground: oklch(0.577 0.245 27.325);
-  --color-border: oklch(0.922 0 0);
-  --color-input: oklch(0.922 0 0);
-  --color-ring: oklch(0.26 0.15 250);
+  --color-background: #0a0e1a;
+  --color-foreground: #ffffff;
+  --color-card: #111827;
+  --color-card-foreground: #ffffff;
+  --color-popover: #111827;
+  --color-popover-foreground: #ffffff;
+  --color-primary: #2563eb;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1a2235;
+  --color-secondary-foreground: #ffffff;
+  --color-muted: #1a2235;
+  --color-muted-foreground: rgba(255, 255, 255, 0.55);
+  --color-accent: #1a2235;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-input: #1a2235;
+  --color-ring: #2563eb;
   --radius: 0.625rem;
 }
 
@@ -29,6 +48,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    line-height: 1.6;
   }
 }

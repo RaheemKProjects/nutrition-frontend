@@ -14,6 +14,7 @@ import {
   DrawerClose,
 } from './components/ui/drawer'
 import './index.css'
+import './App.css'
 
 const mockNutritionData = {
   calories: 650,
@@ -450,7 +451,7 @@ function App() {
   }
 
   const Layout = ({ children, activeTab, onTabClick }) => (
-    <div className="min-h-screen w-full bg-black flex flex-col">
+    <div className="min-h-screen w-full flex flex-col" style={{ background: 'var(--bg-base)' }}>
       <div className="flex-1 flex flex-col overflow-hidden">
         {children}
       </div>
@@ -459,8 +460,8 @@ function App() {
   )
 
   const NavBar = ({ activeTab, onTabClick }) => (
-    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 pb-safe z-50">
-      <div className="flex justify-around items-end py-2 h-20">
+    <div className="fixed bottom-0 left-0 right-0 pb-safe z-50" style={{ background: 'var(--bg-card)', borderTop: '1px solid var(--border)', height: '68px', padding: '10px 0' }}>
+      <div className="flex justify-around items-end h-full">
         {navItems.map((item, index) => {
           const Icon = item.icon
           const isActive = activeTab === item.id
@@ -469,10 +470,12 @@ function App() {
             <button
               key={item.id}
               onClick={() => onTabClick(item.id)}
-              className={`flex flex-col items-center justify-center py-2 px-3 ${isActive ? 'text-white' : 'text-gray-500'}`}
+              className={`flex flex-col items-center justify-center py-2 px-3 relative ${isActive ? '' : ''}`}
+              style={{ color: isActive ? 'var(--primary-bright)' : 'var(--text-muted)' }}
             >
-              <Icon className="w-6 h-6" />
-              <span className="text-xs mt-1">{item.label}</span>
+              <Icon className="w-6 h-6" style={{ opacity: isActive ? 1 : 0.5 }} />
+              <span className="text-xs mt-1" style={{ color: isActive ? 'var(--primary-bright)' : 'var(--text-muted)' }}>{item.label}</span>
+              {isActive && <div style={{ position: 'absolute', bottom: '-2px', width: '24px', height: '3px', background: 'var(--primary-bright)', borderRadius: '2px', boxShadow: '0 -2px 8px var(--primary-glow)' }} />}
             </button>
           )
         })}
@@ -520,59 +523,65 @@ function App() {
       <Layout activeTab="plan" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
+            <h1 className="page-title">Meal Plan</h1>
             <button 
               onClick={() => setShowGoalModal(true)}
-              className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium"
+              className="set-goals-btn"
             >
               Set Goals
             </button>
           </div>
           
           {/* Daily Progress */}
-          <div className="bg-gray-900 rounded-xl p-4 mb-4">
+          <div className="card mb-4">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-white font-semibold">Today's Progress</h3>
-              <span className="text-xs text-gray-400">{totalCalories} / {dietGoals.calories} kcal</span>
+              <h3 className="section-title" style={{ color: 'var(--text-primary)' }}>Today's Progress</h3>
+              <span className="label-text">{totalCalories} / {dietGoals.calories} kcal</span>
             </div>
-            <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
+            <div className="progress-track mb-3">
               <div 
-                className="h-full bg-[#0F2C5C] rounded-full transition-all" 
+                className="progress-bar transition-all" 
                 style={{ width: `${Math.min((totalCalories / dietGoals.calories) * 100, 100)}%` }}
               />
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div>
-                <span className="text-red-400">{totalProtein}g</span>
-                <p className="text-gray-500">Protein</p>
+                <span style={{ color: 'var(--macro-protein)' }}>{totalProtein}g</span>
+                <p className="label-text">Protein</p>
               </div>
               <div>
-                <span className="text-amber-400">{totalCarbs}g</span>
-                <p className="text-gray-500">Carbs</p>
+                <span style={{ color: 'var(--macro-carbs)' }}>{totalCarbs}g</span>
+                <p className="label-text">Carbs</p>
               </div>
               <div>
-                <span className="text-yellow-400">{totalFat}g</span>
-                <p className="text-gray-500">Fat</p>
+                <span style={{ color: 'var(--macro-fat)' }}>{totalFat}g</span>
+                <p className="label-text">Fat</p>
               </div>
             </div>
           </div>
           
           {/* Weekly Overview */}
-          <div className="bg-gray-900 rounded-xl p-4 mb-4">
-            <h3 className="text-white font-semibold mb-3">This Week</h3>
+          <div className="card mb-4">
+            <h3 className="section-title mb-3" style={{ color: 'var(--text-primary)' }}>This Week</h3>
             <div className="flex justify-between gap-1">
               {days.map((day, index) => {
                 const dayCalories = [1850, 2100, 1650, 1920, 2200, 2400, 1316][index]
                 const percentage = Math.min((dayCalories / dietGoals.calories) * 100, 100)
                 return (
                   <div key={day} className="flex flex-col items-center flex-1">
-                    <div className="w-8 h-20 bg-gray-800 rounded-lg relative overflow-hidden">
+                    <div className="w-8 h-20 rounded-lg relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
                       <div 
-                        className="absolute bottom-0 w-full bg-[#0F2C5C] rounded-lg transition-all"
-                        style={{ height: `${percentage}%` }}
+                        className="absolute bottom-0 w-full rounded-lg transition-all"
+                        style={{ 
+                          height: `${percentage}%`,
+                          background: index === new Date().getDay() - 1 
+                            ? 'linear-gradient(180deg, #3b82f6, #1d4ed8)' 
+                            : 'rgba(59,130,246,0.25)',
+                          borderRadius: '8px 8px 0 0'
+                        }}
                       />
                     </div>
-                    <span className="text-xs text-gray-500 mt-1">{day}</span>
+                    <span className="label-text mt-1">{day}</span>
                   </div>
                 )
               })}
@@ -581,12 +590,12 @@ function App() {
           
           {/* Meal Sections */}
           <div className="space-y-3">
-            <h3 className="text-white font-semibold">Today's Meals</h3>
+            <h3 className="section-title" style={{ color: 'var(--text-primary)' }}>Today's Meals</h3>
             {meals.map((meal) => (
-              <div key={meal.id} className="bg-gray-900 rounded-xl p-4">
+              <div key={meal.id} className="meal-section">
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-white font-medium">{meal.name}</h4>
-                  <span className="text-xs text-gray-400">
+                  <h4 style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{meal.name}</h4>
+                  <span className="label-text">
                     {meal.items.reduce((s, i) => s + (i.calories || 0), 0)} kcal
                   </span>
                 </div>
@@ -594,15 +603,15 @@ function App() {
                   <div className="space-y-2">
                     {meal.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-300">{item.name}</span>
-                        <span className="text-[#0F2C5C]">{item.calories} kcal</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>{item.name}</span>
+                        <span style={{ color: 'var(--primary-bright)', fontWeight: 600 }}>{item.calories} kcal</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm">No items added yet</p>
+                  <p className="label-text text-sm">No items added yet</p>
                 )}
-                <button className="mt-2 text-[#0F2C5C] text-sm font-medium">+ Add Food</button>
+                <button className="add-food-link mt-2">+ Add Food</button>
               </div>
             ))}
           </div>
@@ -713,9 +722,9 @@ function App() {
     const dailyAverage = weeklyCalories.reduce((a, b) => a + b, 0) / 7
     
     const macroData = [
-      { name: 'Protein', value: consumed.protein, color: '#ef4444' },
-      { name: 'Carbs', value: consumed.carbs, color: '#f59e0b' },
-      { name: 'Fat', value: consumed.fat, color: '#eab308' }
+      { name: 'Protein', value: consumed.protein, color: 'var(--macro-protein)' },
+      { name: 'Carbs', value: consumed.carbs, color: 'var(--macro-carbs)' },
+      { name: 'Fat', value: consumed.fat, color: 'var(--macro-fat)' }
     ]
     
     const insights = [
@@ -738,18 +747,18 @@ function App() {
     return (
       <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
-          <h1 className="text-2xl font-bold text-white mb-6">Analysis</h1>
+          <h1 className="page-title mb-6">Analysis</h1>
           
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="bg-gray-900 rounded-xl p-4">
-              <p className="text-xs text-gray-400 mb-1">Calories Today</p>
-              <p className="text-2xl font-bold text-orange-500">{consumed.calories}</p>
-              <p className="text-xs text-gray-500">/ {dietGoals.calories} kcal</p>
+            <div className="stat-card">
+              <p className="label-text mb-1">Calories Today</p>
+              <p style={{ fontSize: '36px', fontWeight: 700, color: 'var(--macro-carbs)' }}>{consumed.calories}</p>
+              <p className="label-text">/ {dietGoals.calories} kcal</p>
             </div>
-            <div className="bg-gray-900 rounded-xl p-4">
-              <p className="text-xs text-gray-400 mb-1">Daily Average</p>
-              <p className="text-2xl font-bold text-[#0F2C5C]">{dailyAverage}</p>
-              <p className="text-xs text-gray-500">kcal / day</p>
+            <div className="stat-card">
+              <p className="label-text mb-1">Daily Average</p>
+              <p style={{ fontSize: '36px', fontWeight: 700, color: 'var(--primary-bright)' }}>{Math.round(dailyAverage)}</p>
+              <p className="label-text">kcal / day</p>
             </div>
           </div>
           
