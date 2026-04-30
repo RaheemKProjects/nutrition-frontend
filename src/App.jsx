@@ -694,15 +694,22 @@ function App() {
     )
   }
 
-  if (screen === 'analysis') {
+if (screen === 'analysis') {
     return (
-      <Scanner 
-        user={user} 
-        onLogout={handleLogout}
-        onNavigate={(screenId) => setScreen(screenId)}
-      />
+      <div className="min-h-screen w-full bg-black flex flex-col">
+        <div className="flex-1 relative">
+          <video 
+            ref={videoRef}
+            className="w-full h-full object-cover" 
+            autoPlay 
+            playsInline 
+            muted
+          />
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+      </div>
     )
-}
+  }
 
   if (screen === 'plan') {
     const totalCalories = meals.reduce((sum, meal) => 
