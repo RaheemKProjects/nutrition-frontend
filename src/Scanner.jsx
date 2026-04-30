@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library, Scan } from 'lucide-react'
 import './Scanner.css'
 
-const Scanner = ({ user, onLogout, onNavigate }) => {
+const Scanner = ({ user, onLogout, onNavigate, embedded }) => {
   const [activeMode, setActiveMode] = useState('scan')
   const [activeNav, setActiveNav] = useState('home')
   const videoRef = useRef(null)
@@ -52,12 +52,16 @@ const Scanner = ({ user, onLogout, onNavigate }) => {
   }
 
   return (
-    <div className="scanner-page">
-      {/* Header */}
-      <div className="scanner-header">
-        <h1>Scanner</h1>
-        <button className="menu-btn" onClick={() => onNavigate('settings')}>•••</button>
-      </div>
+    <div className={`scanner-page ${embedded ? 'embedded' : ''}`}>
+      {!embedded && (
+        <>
+          {/* Header */}
+          <div className="scanner-header">
+            <h1>Scanner</h1>
+            <button className="menu-btn" onClick={() => onNavigate('settings')}>•••</button>
+          </div>
+        </>
+      )}
 
       {/* Camera Viewfinder */}
       <div className="viewfinder-container">
@@ -110,8 +114,8 @@ const Scanner = ({ user, onLogout, onNavigate }) => {
         </button>
       </div>
 
-      {/* Bottom Navigation with curved cutout */}
-      <nav className="bottom-nav">
+      {!embedded && (
+        <nav className="bottom-nav">
         <div className="nav-left">
           <button 
             className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
@@ -152,7 +156,8 @@ const Scanner = ({ user, onLogout, onNavigate }) => {
             <span>Settings</span>
           </button>
         </div>
-      </nav>
+</nav>
+        )}
     </div>
   )
 }

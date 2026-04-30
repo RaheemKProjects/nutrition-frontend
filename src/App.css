@@ -1,37 +1,4 @@
-:root {
-  --bg-base: #0a0e1a;
-  --bg-card: #111827;
-  --bg-card-secondary: #1a2235;
-  --primary: #2563eb;
-  --primary-bright: #3b82f6;
-  --primary-glow: rgba(37, 99, 235, 0.25);
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.55);
-  --text-muted: rgba(255, 255, 255, 0.3);
-  --macro-protein: #ff6b6b;
-  --macro-carbs: #ff9500;
-  --macro-fat: #ffd60a;
-  --danger: #ef4444;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-active: rgba(59, 130, 246, 0.5);
-}
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: var(--bg-base);
-  color: var(--text-primary);
-  line-height: 1.6;
-}
-
-#root {
-  min-height: 100vh;
-  background: var(--bg-base);
-}
-
-.app-container {
-  min-height: 100vh;
-  background: var(--bg-base);
-}
 
 .card {
   background: var(--bg-card);
