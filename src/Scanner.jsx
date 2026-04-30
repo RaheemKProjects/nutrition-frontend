@@ -79,10 +79,11 @@ const Scanner = ({ user, onLogout, onNavigate, onClose }) => {
           <span className="corner top-right" />
           <span className="corner bottom-left" />
           <span className="corner bottom-right" />
-        </div>
+</div>
       </div>
 
-      {/* Mode selector buttons */}
+      {/* Show mode buttons only when NOT in overlay mode */}
+      {!onClose && (
       <div className="mode-buttons">
         <button 
           className={`mode-btn ${activeMode === 'scan' ? 'active' : ''}`}
@@ -92,7 +93,10 @@ const Scanner = ({ user, onLogout, onNavigate, onClose }) => {
           <span>Scan food</span>
         </button>
       </div>
+      )}
 
+      {/* Show bottom nav only when NOT in overlay mode */}
+      {!onClose && (
       <nav className="bottom-nav">
         <div className="nav-left">
           <button 
@@ -133,8 +137,9 @@ const Scanner = ({ user, onLogout, onNavigate, onClose }) => {
             <Settings size={20} />
             <span>Settings</span>
           </button>
-</div>
+        </div>
       </nav>
+      )}
     </div>
   )
 }
