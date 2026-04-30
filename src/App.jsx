@@ -65,6 +65,7 @@ function App() {
   
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+  const [showPlanScanner, setShowPlanScanner] = useState(false)
   const [newGoal, setNewGoal] = useState({ ...dietGoals })
   
   const videoRef = useRef(null)
@@ -734,8 +735,6 @@ const remaining = {
       sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
     
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    
-    const [showPlanScanner, setShowPlanScanner] = useState(false)
     
     return (
       <Layout activeTab="plan" onTabClick={(id) => setScreen(id)}>
