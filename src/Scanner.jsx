@@ -91,27 +91,6 @@ const Scanner = ({ user, onLogout, onNavigate, onClose }) => {
           <span className="mode-icon">🍎</span>
           <span>Scan food</span>
         </button>
-        <button 
-          className={`mode-btn ${activeMode === 'barcode' ? 'active' : ''}`}
-          onClick={() => handleModeClick('barcode')}
-        >
-          <span className="mode-icon">|||</span>
-          <span>Barcode</span>
-        </button>
-        <button 
-          className={`mode-btn ${activeMode === 'label' ? 'active' : ''}`}
-          onClick={() => handleModeClick('label')}
-        >
-          <span className="mode-icon">📄</span>
-          <span>Food label</span>
-        </button>
-        <button 
-          className={`mode-btn ${activeMode === 'library' ? 'active' : ''}`}
-          onClick={() => handleModeClick('library')}
-        >
-          <span className="mode-icon">🖼</span>
-          <span>Library</span>
-        </button>
       </div>
 
       <nav className="bottom-nav">
