@@ -463,15 +463,19 @@ function App() {
   const NavBar = ({ activeTab, onTabClick }) => (
     <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 pb-safe z-50">
       <div className="flex justify-around items-end py-2 h-20">
-        {navItems.map((item, index) => {
+        {navItems.map((item) => {
           const Icon = item.icon
           const isActive = activeTab === item.id
           
           return (
             <button
               key={item.id}
-              onClick={() => onTabClick(item.id)}
-              className={`flex flex-col items-center justify-center py-2 px-3 ${isActive ? 'text-white' : 'text-gray-500'}`}
+              type="button"
+              onClick={() => {
+                onTabClick(item.id)
+              }}
+              className={`flex flex-col items-center justify-center py-2 px-4 ${isActive ? 'text-white' : 'text-gray-500'}`}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
               <Icon className="w-6 h-6" />
               <span className="text-xs mt-1">{item.label}</span>
@@ -513,7 +517,7 @@ function App() {
       fat: totalFat
     }
     
-const remaining = {
+    const remaining = {
       calories: dietGoals.calories - consumed.calories,
       protein: dietGoals.protein - consumed.protein,
       carbs: dietGoals.carbs - consumed.carbs,
