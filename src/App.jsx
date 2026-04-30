@@ -501,16 +501,6 @@ function App() {
 }
 
   if (screen === 'home') {
-    return (
-      <Scanner 
-        user={user} 
-        onLogout={handleLogout}
-        onNavigate={(screenId) => setScreen(screenId)}
-      />
-    )
-  }
-
-  if (screen === 'analysis') {
     const totalConsumed = meals.reduce((sum, meal) => 
       sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
     const totalProtein = meals.reduce((sum, meal) => 
@@ -543,11 +533,11 @@ function App() {
       { day: 'Sat', calories: 2400 },
       { day: 'Sun', calories: 1316 },
     ]
-
+    
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     const weeklyCalories = weeklyData.map(d => d.calories)
     const dailyAverage = weeklyCalories.reduce((a, b) => a + b, 0) / 7
-
+    
     const macroData = [
       { name: 'Protein', value: consumed.protein, color: '#ef4444' },
       { name: 'Carbs', value: consumed.carbs, color: '#f59e0b' },
@@ -557,24 +547,19 @@ function App() {
     const insights = [
       { title: 'Start Tracking', description: 'Add meals to your plan to get personalized nutrition insights.', icon: Beef },
       { title: 'Set Goals', description: 'Use the Set Goals button on the Plan page to customize your daily targets.', icon: Wheat },
-      { title: 'Track Progress', description: 'Monitor your daily calorie and macro intake on this Analysis page.', icon: Droplets },
+      { title: 'Track Progress', description: 'Monitor your daily calorie and macro intake on this page.', icon: Droplets },
     ]
     
-    const CustomTooltip = ({ active, payload }) => {
-      if (active && payload && payload.length) {
-        return (
-          <div className="bg-gray-800 px-3 py-2 rounded-lg border border-gray-700">
-            <p className="text-white text-sm font-medium">{payload[0].value} kcal</p>
-          </div>
-        )
-      }
-      return null
-    }
-    
     return (
-      <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
+      <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
-          <h1 className="text-2xl font-bold text-white mb-6">Analysis</h1>
+          <Scanner 
+            user={user} 
+            onLogout={handleLogout}
+            onNavigate={(screenId) => setScreen(screenId)}
+          />
+          
+          <h1 className="text-2xl font-bold text-white mb-6 mt-4">Analysis</h1>
           
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="bg-gray-900 rounded-xl p-4">
@@ -584,50 +569,48 @@ function App() {
             </div>
             <div className="bg-gray-900 rounded-xl p-4">
               <p className="text-xs text-gray-400 mb-1">Daily Average</p>
-              <p className="text-2xl font-bold text-[#0F2C5C]">{dailyAverage}</p>
+              <p className="text-2xl font-bold text-[#0F2C5C]">{Math.round(dailyAverage)}</p>
               <p className="text-xs text-gray-500">kcal / day</p>
             </div>
           </div>
           
           <div className="bg-gray-900 rounded-xl p-4 mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold">Food Remaining</h3>
-              <span className="text-xs text-gray-400">{Math.round((remaining.calories / dietGoals.calories) * 100)}% left</span>
-            </div>
-            <div className="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
-              <div 
-                className="h-full bg-gradient-to-r from-[#0F2C5C] to-[#0F2C5C] rounded-full transition-all" 
-                style={{ width: `${Math.min((remaining.calories / dietGoals.calories) * 100, 100)}%` }} 
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <p className="text-xs text-gray-500">Protein</p>
-                <p className="text-sm font-bold text-red-400">{remaining.protein}g</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Carbs</p>
-                <p className="text-sm font-bold text-amber-400">{remaining.carbs}g</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Fat</p>
-                <p className="text-sm font-bold text-yellow-400">{remaining.fat}g</p>
-              </div>
+            <h3 className="text-white font-semibold mb-3">Today</h3>
+            <div className="flex justify-between gap-1">
+              {weekdays.map((day, index) => {
+                const dayCalories = weeklyData[index].calories
+                const percentage = Math.min((dayCalories / dietGoals.calories) * 100, 100)
+                const isToday = index === new Date().getDay() - 1
+                return (
+                  <div key={day} className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-20 bg-gray-800 rounded-lg relative overflow-hidden">
+                      <div 
+                        className="absolute bottom-0 w-full rounded-lg transition-all"
+                        style={{ 
+                          height: `${percentage}%`,
+                          background: isToday ? '#2563eb' : 'rgba(37, 99, 235, 0.25)'
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500 mt-1">{day}</span>
+                  </div>
+                )
+              })}
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-gray-900 rounded-xl p-4">
-              <h3 className="text-white font-semibold text-sm mb-3">Macronutrients</h3>
-              <ResponsiveContainer width="100%" height={160}>
+          <div className="bg-gray-900 rounded-xl p-4 mb-4">
+            <h3 className="text-white font-semibold text-sm mb-3">Macronutrients</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={macroData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={45}
-                    outerRadius={65}
-                    paddingAngle={3}
+                    innerRadius={40}
+                    outerRadius={60}
+                    paddingAngle={5}
                     dataKey="value"
                   >
                     {macroData.map((entry, index) => (
@@ -635,40 +618,19 @@ function App() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
-                    itemStyle={{ color: '#9ca3af' }}
+                    contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px' }}
+                    itemStyle={{ color: '#fff' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="flex justify-center gap-3 mt-2">
-                {macroData.map((item, index) => (
-                  <div key={index} className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-xs text-gray-400">{item.name}</span>
-                  </div>
-                ))}
-              </div>
             </div>
-            
-            <div className="bg-gray-900 rounded-xl p-4">
-              <h3 className="text-white font-semibold text-sm mb-3">Weekly Calories</h3>
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                  <XAxis 
-                    dataKey="day" 
-                    tick={{ fill: '#6b7280', fontSize: 10 }} 
-                    axisLine={{ stroke: '#374151' }}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="calories" fill="#0F2C5C" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {macroData.map((macro) => (
+                <div key={macro.name} className="text-center">
+                  <span className="text-sm font-medium" style={{ color: macro.color }}>{macro.value}g</span>
+                  <p className="text-xs text-gray-500">{macro.name}</p>
+                </div>
+              ))}
             </div>
           </div>
           
@@ -737,6 +699,16 @@ function App() {
       </Layout>
     )
   }
+
+  if (screen === 'analysis') {
+    return (
+      <Scanner 
+        user={user} 
+        onLogout={handleLogout}
+        onNavigate={(screenId) => setScreen(screenId)}
+      />
+    )
+}
 
   if (screen === 'plan') {
     const totalCalories = meals.reduce((sum, meal) => 
