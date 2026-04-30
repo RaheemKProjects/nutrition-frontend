@@ -696,18 +696,13 @@ function App() {
 
 if (screen === 'analysis') {
     return (
-      <div className="min-h-screen w-full bg-black flex flex-col">
-        <div className="flex-1 relative">
-          <video 
-            ref={videoRef}
-            className="w-full h-full object-cover" 
-            autoPlay 
-            playsInline 
-            muted
-          />
-          <div className="absolute inset-0 bg-black/30" />
+      <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16">
+          <BarChart3 className="w-16 h-16 text-gray-400 mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Coming soon...</h2>
+          <p className="text-gray-500 text-center">Analysis features will be available here.</p>
         </div>
-      </div>
+      </Layout>
     )
   }
 
