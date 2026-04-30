@@ -501,6 +501,16 @@ function App() {
 }
 
   if (screen === 'home') {
+    return (
+      <Scanner 
+        user={user} 
+        onLogout={handleLogout}
+        onNavigate={(screenId) => setScreen(screenId)}
+      />
+    )
+  }
+
+  if (screen === 'analysis') {
     const totalConsumed = meals.reduce((sum, meal) => 
       sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
     const totalProtein = meals.reduce((sum, meal) => 
