@@ -53,7 +53,6 @@ const Scanner = ({ user, onLogout, onNavigate, onClose }) => {
 
   return (
     <div className="scanner-page">
-      {/* Header with close button */}
       <div className="scanner-header">
         {onClose ? (
           <button className="menu-btn" onClick={onClose}>✕</button>
@@ -63,7 +62,6 @@ const Scanner = ({ user, onLogout, onNavigate, onClose }) => {
         {!onClose && <button className="menu-btn" onClick={() => onNavigate('settings')}>•••</button>}
       </div>
 
-      {/* Camera Viewfinder */}
       <div className="viewfinder-container">
         <video 
           ref={videoRef}
@@ -73,72 +71,76 @@ const Scanner = ({ user, onLogout, onNavigate, onClose }) => {
           muted
         />
         
-        {/* Scanning frame overlay */}
         <div className="scan-frame">
           <span className="corner top-left" />
           <span className="corner top-right" />
           <span className="corner bottom-left" />
           <span className="corner bottom-right" />
-</div>
+        </div>
+
+        {onClose && (
+          <div className="overlay-capture-container">
+            <button className="overlay-capture-btn" onClick={handleCapture}>
+              <Camera size={32} strokeWidth={2} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Show mode buttons only when NOT in overlay mode */}
       {!onClose && (
-      <div className="mode-buttons">
-        <button 
-          className={`mode-btn ${activeMode === 'scan' ? 'active' : ''}`}
-          onClick={() => handleModeClick('scan')}
-        >
-          <span className="mode-icon">🍎</span>
-          <span>Scan food</span>
-        </button>
-      </div>
+        <div className="mode-buttons">
+          <button 
+            className={`mode-btn ${activeMode === 'scan' ? 'active' : ''}`}
+            onClick={() => handleModeClick('scan')}
+          >
+            <span className="mode-icon">🍎</span>
+            <span>Scan food</span>
+          </button>
+        </div>
       )}
 
-      {/* Show bottom nav only when NOT in overlay mode */}
       {!onClose && (
-      <nav className="bottom-nav">
-        <div className="nav-left">
-          <button 
-            className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
-            onClick={() => handleNavClick('home')}
-          >
-            <Home size={22} />
-            <span>Home</span>
-          </button>
-          <button 
-            className={`nav-item ${activeNav === 'plan' ? 'active' : ''}`}
-            onClick={() => handleNavClick('plan')}
-          >
-            <Calendar size={22} />
-            <span>Plan</span>
-          </button>
-        </div>
-        
-        {/* Scanner Button in center cutout */}
-        <div className="fab-container">
-          <button className="fab-btn" onClick={handleCapture}>
-            <Scan size={28} strokeWidth={2.5} />
-          </button>
-        </div>
-        
-        <div className="nav-right">
-          <button 
-            className={`nav-item ${activeNav === 'analysis' ? 'active' : ''}`}
-            onClick={() => handleNavClick('analysis')}
-          >
-            <BarChart3 size={22} />
-            <span>Analysis</span>
-          </button>
-          <button 
-            className={`nav-item ${activeNav === 'settings' ? 'active' : ''}`}
-            onClick={() => handleNavClick('settings')}
-          >
-            <Settings size={20} />
-            <span>Settings</span>
-          </button>
-        </div>
-      </nav>
+        <nav className="bottom-nav">
+          <div className="nav-left">
+            <button 
+              className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
+              onClick={() => handleNavClick('home')}
+            >
+              <Home size={22} />
+              <span>Home</span>
+            </button>
+            <button 
+              className={`nav-item ${activeNav === 'plan' ? 'active' : ''}`}
+              onClick={() => handleNavClick('plan')}
+            >
+              <Calendar size={22} />
+              <span>Plan</span>
+            </button>
+          </div>
+          
+          <div className="fab-container">
+            <button className="fab-btn" onClick={handleCapture}>
+              <Scan size={28} strokeWidth={2.5} />
+            </button>
+          </div>
+          
+          <div className="nav-right">
+            <button 
+              className={`nav-item ${activeNav === 'analysis' ? 'active' : ''}`}
+              onClick={() => handleNavClick('analysis')}
+            >
+              <BarChart3 size={22} />
+              <span>Analysis</span>
+            </button>
+            <button 
+              className={`nav-item ${activeNav === 'settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick('settings')}
+            >
+              <Settings size={20} />
+              <span>Settings</span>
+            </button>
+          </div>
+        </nav>
       )}
     </div>
   )
