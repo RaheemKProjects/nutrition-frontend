@@ -356,12 +356,9 @@ function App() {
     try {
       const nav = window.navigator
       if (!nav) return false
-      
       const mediaDevices = nav.mediaDevices
       if (!mediaDevices) return false
-      
       if (typeof mediaDevices.getUserMedia !== 'function') return false
-      
       return true
     } catch (e) {
       console.log('Camera check error:', e)
@@ -376,11 +373,10 @@ function App() {
       setCameraPermission('denied')
       return
     }
-    
     try {
       const permissionStatus = await navigator.permissions.query({ name: 'camera' })
       setCameraPermission(permissionStatus.state)
-      permissionStatus.onchange = () => setCameraPermission(permissionState.state)
+      permissionStatus.onchange = () => setCameraPermission(permissionStatus.state)
       alert(`Current camera permission: ${permissionStatus.state}`)
     } catch (err) {
       console.log('Permission API not supported, trying direct camera access')
@@ -396,89 +392,41 @@ function App() {
     }
   }
 
-  const requestCameraAccess = async () => {
-    const isSupported = checkCameraSupport()
-    if (!isSupported) {
-      alert('Camera API is not supported on this device/browser.')
-      return
-    }
-    
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      })
-      stream.getTracks().forEach(track => track.stop())
-      setCameraPermission('granted')
-      alert('Camera access granted!')
-    } catch (err) {
-      console.error('Camera error:', err)
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setCameraPermission('denied')
-        alert('Camera access denied. Please enable it in your device Settings.')
-      } else if (err.name === 'NotFoundError') {
-        alert('No camera found on this device.')
-      } else {
-        alert(`Camera error: ${err.message}`)
-      }
-    }
-  }
-
-  const openSettings = () => {
-    window.open('app-settings:')
-  }
-
   const startCamera = async () => {
     const isSupported = checkCameraSupport()
-    if (!isSupported) {
-      console.log('Camera API not supported')
-      return
-    }
-
+    if (!isSupported) return
     const video = videoRef.current
     if (!video) return
-    
+
     const stopCurrentStream = () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop())
         streamRef.current = null
       }
     }
-    
+
     const tryCamera = async (facingMode) => {
       try {
         stopCurrentStream()
-        
-        const constraints = {
-          video: {
-            facingMode: facingMode,
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false
-        }
-        
-        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        })
         streamRef.current = stream
         video.srcObject = stream
-        
         await new Promise((resolve) => {
-          video.onloadedmetadata = () => {
-            video.play().then(resolve).catch(resolve)
-          }
+          video.onloadedmetadata = () => { video.play().then(resolve).catch(resolve) }
           setTimeout(resolve, 2000)
         })
-        
         return true
       } catch (err) {
         console.log(`Camera failed with ${facingMode}:`, err.message)
         return false
       }
     }
-    
+
     const success = await tryCamera({ ideal: 'environment' })
-    if (!success) {
-      await tryCamera({ ideal: 'user' })
-    }
+    if (!success) await tryCamera({ ideal: 'user' })
   }
 
   const stopCamera = () => {
@@ -509,12 +457,39 @@ function App() {
     setTimeout(startCamera, 100)
   }
 
-  const confirmPicture = () => {
+  const confirmPicture = async () => {
     setScreen('loading')
-    setTimeout(() => {
-      setScreen('results')
-      setDrawerOpen(true)
-    }, 2000)
+    try {
+      const base64Image = capturedImage.replace(/^data:image\/\w+;base64,/, '')
+
+      const response = await fetch('https://food-ai-app-ud2m.onrender.com/image-recognition', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_app_id: { user_id: 'clarifai', app_id: 'main' },
+          inputs: [{ data: { image: { base64: base64Image } } }],
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('API request failed')
+      }
+
+      const data = await response.json()
+      
+      if (data && data.status && data.status.code === 10000) {
+        setScreen('results')
+        setDrawerOpen(true)
+      } else {
+        alert('Unable to analyze this image. The food recognition service may not support this type of image. Please try a different photo.')
+        setScreen('preview')
+      }
+
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Unable to analyze this image. The food recognition service may not support this image type. Please try a different photo with clearer food visibility.')
+      setScreen('preview')
+    }
   }
 
   const resetApp = () => {
@@ -523,16 +498,11 @@ function App() {
     setDrawerOpen(false)
   }
 
+  useEffect(() => { checkCameraPermission() }, [])
   useEffect(() => {
-    checkCameraPermission()
-  }, [])
-
-  useEffect(() => {
-    if (screen === 'camera' || screen === 'home') {
-      startCamera()
-    }
+    if (screen === 'camera' || screen === 'home') startCamera()
     return () => stopCamera()
-}, [screen])
+  }, [screen])
 
   if (screen === 'login') {
     return <AuthScreen />
@@ -549,19 +519,10 @@ function App() {
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
-  const placeholderScreens = {
-    scanfood: { title: 'Scan Food', icon: ScanLine },
-    barcode: { title: 'Barcode Scanner', icon: ScanBarcode },
-    foodlabel: { title: 'Food Label', icon: FileText },
-    library: { title: 'Food Library', icon: Library },
-  }
-
   const Layout = ({ children, activeTab, onTabClick }) => (
-    <div className="min-h-screen w-full bg-black flex flex-col">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {children}
-      </div>
+    <div className="min-h-screen w-full bg-white flex flex-col">
       <NavBar activeTab={activeTab} onTabClick={onTabClick} />
+      <div className="flex-1 flex flex-col">{children}</div>
     </div>
   )
 
@@ -591,20 +552,6 @@ function App() {
     </div>
   )
 
-  const PlaceholderScreen = ({ screenId }) => {
-    const screen = placeholderScreens[screenId]
-    const Icon = screen.icon
-    return (
-      <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16 md:pt-8">
-          <Icon className="w-16 h-16 text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">{screen.title}</h2>
-          <p className="text-gray-500 text-center">Coming soon...</p>
-        </div>
-      </Layout>
-    )
-}
-
   if (screen === 'home') {
     const totalConsumed = meals.reduce((sum, meal) => 
       sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
@@ -633,7 +580,7 @@ function App() {
     
     const hasAnyMeals = meals.some(m => m.items && m.items.length > 0)
     const aiInsights = hasAnyMeals ? [
-      { type: 'success', text: 'Your protein is on track — great job!' },
+      { type: 'success', text: 'Your protein is on track.' },
       { type: 'warning', text: 'You have only had 1 serving of vegetables today.' },
     ] : [
       { type: 'info', text: 'Start logging meals to get personalized insights.' },
@@ -665,7 +612,6 @@ function App() {
     return (
       <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
-          {/* SECTION 1: HEADER */}
           <div className="mb-6 mt-2">
             <h1 className="text-3xl font-bold text-white">{greeting()}</h1>
             <p className="text-gray-400 mt-1 text-base">
@@ -673,7 +619,6 @@ function App() {
             </p>
           </div>
           
-          {/* SECTION 2: CALORIE RING */}
           <div className="bg-[#161B22] rounded-2xl p-6 mb-4 border border-[#1E2530]">
             <div className="flex flex-col items-center">
               <div className="relative w-52 h-52">
@@ -709,7 +654,6 @@ function App() {
               </div>
             </div>
             
-            {/* Macros Pills */}
             <div className="flex justify-center gap-3 mt-4">
               <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
                 <span className="text-red-400 font-semibold">{consumed.protein}g</span>
@@ -726,7 +670,6 @@ function App() {
             </div>
           </div>
           
-          {/* SECTION 3: RECENT MEALS */}
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4">Recent Meals</h3>
             {!hasAnyMeals ? (
@@ -762,7 +705,6 @@ function App() {
             </button>
           </div>
           
-          {/* SECTION 4: AI NUTRITIONAL INSIGHTS */}
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4">AI Insights</h3>
             <div className="space-y-3">
@@ -794,7 +736,6 @@ function App() {
             </button>
           </div>
           
-          {/* SECTION 5: QUICK ACTIONS */}
           <div className="mb-4">
             <h3 className="text-white font-semibold mb-4">Quick Add</h3>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -818,7 +759,7 @@ function App() {
     )
   }
 
-if (screen === 'analysis') {
+  if (screen === 'analysis') {
     const totalConsumed = meals.reduce((sum, meal) => 
       sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
     const totalProtein = meals.reduce((sum, meal) => 
@@ -911,7 +852,6 @@ if (screen === 'analysis') {
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
           <h1 className="text-2xl font-bold text-white mb-4">Analysis</h1>
           
-          {/* Macronutrients Donut Chart */}
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4">Macronutrients</h3>
             <div className="h-48 min-h-[192px]">
@@ -947,7 +887,6 @@ if (screen === 'analysis') {
             </div>
           </div>
           
-          {/* Food Logbook Section */}
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white font-semibold">Food Logbook</h3>
@@ -956,7 +895,6 @@ if (screen === 'analysis') {
               </button>
             </div>
             
-            {/* Summary Row */}
             <div className="grid grid-cols-3 gap-2 mb-4">
               <div className="bg-[#0D1117] rounded-lg p-3 text-center">
                 <p className="text-white font-semibold text-lg">{weekEntries.length}</p>
@@ -972,7 +910,6 @@ if (screen === 'analysis') {
               </div>
             </div>
             
-            {/* Search and Filters */}
             <input
               type="text"
               placeholder="Search foods..."
@@ -997,7 +934,6 @@ if (screen === 'analysis') {
               ))}
             </div>
             
-            {/* Log Entries */}
             {filteredEntries.length === 0 ? (
               <div className="flex flex-col items-center py-8">
                 <ClipboardIcon />
@@ -1043,7 +979,6 @@ if (screen === 'analysis') {
                             </div>
                           </div>
                           
-                          {/* Expanded Macro Breakdown */}
                           {isExpanded && (
                             <div className="mt-3 pt-3 border-t border-[#1E2530]">
                               <div className="flex items-center gap-3">
@@ -1099,368 +1034,51 @@ if (screen === 'analysis') {
     )
   }
 
-  if (screen === 'plan') {
-    const totalCalories = meals.reduce((sum, meal) => 
-      sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
-    const totalProtein = meals.reduce((sum, meal) => 
-      sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
-    const totalCarbs = meals.reduce((sum, meal) => 
-      sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
-    const totalFat = meals.reduce((sum, meal) => 
-      sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
-    
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    
-    return (
-      <Layout activeTab="plan" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setShowPlanScanner(true)}
-                className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1"
-              >
-                <Camera className="w-4 h-4" />
-                Scan Food
-              </button>
-              <button 
-                onClick={() => setShowGoalModal(true)}
-                className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium"
-              >
-                Set Goals
-              </button>
-            </div>
-          </div>
-          
-          {showPlanScanner && (
-            <div className="fixed inset-0 z-[100] bg-black flex flex-col">
-              <Scanner 
-                user={user} 
-                onLogout={handleLogout}
-                onNavigate={(screenId) => {
-                  if (screenId) setScreen(screenId)
-                }}
-                onClose={() => setShowPlanScanner(false)}
-              />
-            </div>
-          )}
-          
-          {/* Daily Progress */}
-          <div className="bg-gray-900 rounded-xl p-4 mb-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-white font-semibold">Today's Progress</h3>
-              <span className="text-xs text-gray-400">{totalCalories} / {dietGoals.calories} kcal</span>
-            </div>
-            <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
-              <div 
-                className="h-full bg-[#0F2C5C] rounded-full transition-all" 
-                style={{ width: `${Math.min((totalCalories / dietGoals.calories) * 100, 100)}%` }}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div>
-                <span className="text-red-400">{totalProtein}g</span>
-                <p className="text-gray-500">Protein</p>
-              </div>
-              <div>
-                <span className="text-amber-400">{totalCarbs}g</span>
-                <p className="text-gray-500">Carbs</p>
-              </div>
-              <div>
-                <span className="text-yellow-400">{totalFat}g</span>
-                <p className="text-gray-500">Fat</p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Weekly Overview */}
-          <div className="bg-gray-900 rounded-xl p-4 mb-4">
-            <h3 className="text-white font-semibold mb-3">This Week</h3>
-            <div className="flex justify-between gap-1">
-              {days.map((day, index) => {
-                const dayCalories = [1850, 2100, 1650, 1920, 2200, 2400, 1316][index]
-                const percentage = Math.min((dayCalories / dietGoals.calories) * 100, 100)
-                return (
-                  <div key={day} className="flex flex-col items-center flex-1">
-                    <div className="w-8 h-20 bg-gray-800 rounded-lg relative overflow-hidden">
-                      <div 
-                        className="absolute bottom-0 w-full bg-[#0F2C5C] rounded-lg transition-all"
-                        style={{ height: `${percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500 mt-1">{day}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-          
-          {/* Meal Sections */}
-          <div className="space-y-3">
-            <h3 className="text-white font-semibold">Today's Meals</h3>
-            {meals.map((meal) => (
-              <div key={meal.id} className="bg-gray-900 rounded-xl p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-white font-medium">{meal.name}</h4>
-                  <span className="text-xs text-gray-400">
-                    {meal.items.reduce((s, i) => s + (i.calories || 0), 0)} kcal
-                  </span>
-                </div>
-                {meal.items.length > 0 ? (
-                  <div className="space-y-2">
-                    {meal.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-300">{item.name}</span>
-                        <span className="text-[#0F2C5C]">{item.calories} kcal</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">No items added yet</p>
-                )}
-                <button className="mt-2 text-[#0F2C5C] text-sm font-medium">+ Add Food</button>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        {/* Goal Modal */}
-        {showGoalModal && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-900 rounded-xl p-6 w-full max-w-sm">
-              <h3 className="text-white font-semibold text-lg mb-4">Set Daily Goals</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-gray-400 text-sm">Calories (kcal)</label>
-                  <input 
-                    type="number" 
-                    value={newGoal.calories}
-                    onChange={(e) => setNewGoal({...newGoal, calories: Number(e.target.value)})}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-sm">Protein (g)</label>
-                  <input 
-                    type="number" 
-                    value={newGoal.protein}
-                    onChange={(e) => setNewGoal({...newGoal, protein: Number(e.target.value)})}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-sm">Carbs (g)</label>
-                  <input 
-                    type="number" 
-                    value={newGoal.carbs}
-                    onChange={(e) => setNewGoal({...newGoal, carbs: Number(e.target.value)})}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-sm">Fat (g)</label>
-                  <input 
-                    type="number" 
-                    value={newGoal.fat}
-                    onChange={(e) => setNewGoal({...newGoal, fat: Number(e.target.value)})}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button 
-                  onClick={() => setShowGoalModal(false)}
-                  className="flex-1 bg-gray-700 text-white py-2 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={() => {
-                    setDietGoals(newGoal)
-                    setShowGoalModal(false)
-                  }}
-                  className="flex-1 bg-[#0F2C5C] text-white py-2 rounded-lg font-medium"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </Layout>
-    )
-  }
+  if (screen === 'camera') return (
+    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center relative">
+      <video ref={videoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
+      <canvas ref={canvasRef} className="hidden" />
+      <div className="absolute inset-0 bg-black/30" />
+      <Button size="icon" className="w-20 h-20 rounded-full bg-white/90 hover:bg-white text-gray-800 z-10" onClick={takePicture}>
+        <Camera className="w-10 h-10" />
+      </Button>
+      <p className="absolute bottom-24 text-white font-medium z-10">Tap to capture</p>
+      <Button variant="ghost" className="absolute top-4 left-4 text-white z-10" onClick={() => setScreen('home')}>
+        <Home className="w-6 h-6" />
+      </Button>
+    </div>
+  )
 
-  if (screen === 'settings') {
-    return (
-      <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
-        <div className="pt-16 md:pt-8 p-6 overflow-y-auto">
-          <h1 className="text-2xl font-bold text-white mb-6">Settings</h1>
-          
-          <div className="space-y-4">
-            <div className="bg-gray-900 rounded-xl p-4">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-[#0F2C5C] rounded-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold">{user?.name}</h3>
-                  <p className="text-gray-400 text-sm">{user?.email}</p>
-                </div>
-              </div>
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full border-red-600 text-red-400 hover:bg-red-900/20"
-              >
-                <LogOut className="w-5 h-5 mr-2" />
-                Sign Out
-              </Button>
-            </div>
-            
-            <div className="bg-gray-900 rounded-xl p-4">
-              <h3 className="font-semibold text-white mb-3">Camera Access</h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Camera Permission</span>
-                  <span className={`text-sm font-medium ${
-                    cameraPermission === 'granted' ? 'text-[#0F2C5C]' : 
-                    cameraPermission === 'denied' ? 'text-red-400' : 'text-yellow-400'
-                  }`}>
-                    {cameraPermission === 'granted' ? 'Allowed' : 
-                     cameraPermission === 'denied' ? 'Denied' : 'Not Set'}
-                  </span>
-                </div>
-                
-                <Button
-                  onClick={requestCameraAccess}
-                  className="w-full bg-[#0F2C5C] hover:bg-[#0a2349]"
-                >
-                  <Camera className="w-5 h-5 mr-2" />
-                  Request Camera Access
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={checkCameraPermission}
-                  className="w-full border-gray-600 text-white"
-                >
-                  Check Permission Status
-                </Button>
-                
-                {cameraPermission === 'denied' && (
-                  <Button
-                    variant="outline"
-                    onClick={openSettings}
-                    className="w-full border-red-600 text-red-400 hover:bg-red-900/20"
-                  >
-                    <Settings className="w-5 h-5 mr-2" />
-                    Open Device Settings
-                  </Button>
-                )}
-              </div>
-            </div>
-            
-            <div className="bg-gray-900 rounded-xl p-4">
-              <h3 className="font-semibold text-white mb-2">About</h3>
-              <p className="text-sm text-gray-400">NutriSnap v1.0.0</p>
-              <p className="text-sm text-gray-400 mt-1">Track your nutrition effortlessly</p>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    )
-  }
-
-  if (screen === 'scanfood') return <PlaceholderScreen screenId="scanfood" />
-  if (screen === 'barcode') return <PlaceholderScreen screenId="barcode" />
-  if (screen === 'foodlabel') return <PlaceholderScreen screenId="foodlabel" />
-  if (screen === 'library') return <PlaceholderScreen screenId="library" />
-
-  if (screen === 'camera') {
-    return (
-      <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center relative">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <canvas ref={canvasRef} className="hidden" />
-        <div className="absolute inset-0 bg-black/30" />
-        <Button
-          size="icon"
-          className="w-20 h-20 rounded-full bg-white/90 hover:bg-white text-gray-800 z-10"
-          onClick={takePicture}
-        >
-          <Camera className="w-10 h-10" />
-        </Button>
-        <p className="absolute bottom-24 text-white font-medium z-10">Tap to capture</p>
-        <Button
-          variant="ghost"
-          className="absolute top-4 left-4 text-white z-10"
-          onClick={() => setScreen('home')}
-        >
-          <Home className="w-6 h-6" />
-        </Button>
+  if (screen === 'preview') return (
+    <div className="min-h-screen w-full bg-white flex flex-col">
+      <div className="flex-1 relative">
+        <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
       </div>
-    )
-  }
-
-  if (screen === 'preview') {
-    return (
-      <div className="min-h-screen w-full bg-white flex flex-col">
-        <div className="flex-1 relative">
-          <img
-            src={capturedImage}
-            alt="Captured"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
-          <div className="flex gap-4 justify-center">
-            <Button
-              size="lg"
-              className="bg-red-500 hover:bg-red-600 text-white px-8"
-              onClick={retakePicture}
-            >
-              <RotateCcw className="w-5 h-5 mr-2" />
-              Retake
-            </Button>
-            <Button
-              size="lg"
-              className="bg-[#0F2C5C] hover:bg-[#0a2349] text-white px-8"
-              onClick={confirmPicture}
-            >
-              <Check className="w-5 h-5 mr-2" />
-              Confirm
-            </Button>
-          </div>
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
+        <div className="flex gap-4 justify-center">
+          <Button size="lg" className="bg-red-500 hover:bg-red-600 text-white px-8" onClick={retakePicture}>
+            <RotateCcw className="w-5 h-5 mr-2" />Retake
+          </Button>
+          <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white px-8" onClick={confirmPicture}>
+            <Check className="w-5 h-5 mr-2" />Confirm
+          </Button>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
 
-  if (screen === 'loading') {
-    return (
-      <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center">
-        <Loader2 className="w-16 h-16 animate-spin text-gray-800 mb-4" />
-        <p className="text-gray-600 font-medium">Analyzing your meal...</p>
-        <p className="text-gray-400 text-sm mt-2">Detecting nutrients</p>
-      </div>
-    )
-  }
+  if (screen === 'loading') return (
+    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center">
+      <Loader2 className="w-16 h-16 animate-spin text-gray-800 mb-4" />
+      <p className="text-gray-600 font-medium">Analyzing your meal...</p>
+      <p className="text-gray-400 text-sm mt-2">Detecting nutrients</p>
+    </div>
+  )
 
   if (screen === 'results') {
     return (
       <div className="min-h-screen w-full relative">
-        <img
-          src={capturedImage}
-          alt="Results background"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <img src={capturedImage} alt="Results background" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40" />
 
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
@@ -1515,33 +1133,10 @@ if (screen === 'analysis') {
                   </CardContent>
                 </Card>
               </div>
-
-              <div className="space-y-3">
-                <h4 className="font-semibold text-sm text-gray-700">Additional Nutrients</h4>
-                {mockNutritionData.nutrients.map((nutrient, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <div className="flex items-center gap-2">
-                      <Apple className="w-4 h-4 text-[#0F2C5C]" />
-                      <span className="text-sm text-gray-600">{nutrient.name}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-medium">{nutrient.amount}{nutrient.unit}</span>
-                      <span className="text-xs text-gray-400 ml-1">({nutrient.daily}% DV)</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Weight</span>
-                  <span className="font-medium">{mockNutritionData.weight}g</span>
-                </div>
-              </div>
             </div>
-            <DrawerFooter className="pt-2">
-              <Button onClick={resetApp} className="w-full">
-                Scan Another Meal
+            <DrawerFooter>
+              <Button onClick={resetApp} className="w-full bg-[#0F2C5C]">
+                Add to My Meals
               </Button>
             </DrawerFooter>
           </DrawerContent>
@@ -1550,7 +1145,218 @@ if (screen === 'analysis') {
     )
   }
 
-  return null
+  if (screen === 'plan') {
+    const totalCalories = meals.reduce((sum, meal) => 
+      sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
+    const totalProtein = meals.reduce((sum, meal) => 
+      sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
+    const totalCarbs = meals.reduce((sum, meal) => 
+      sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
+    const totalFat = meals.reduce((sum, meal) => 
+      sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
+    
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    
+    return (
+      <Layout activeTab="plan" onTabClick={(id) => setScreen(id)}>
+        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setShowPlanScanner(true)}
+                className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1"
+              >
+                <Camera className="w-4 h-4" />
+                Scan Food
+              </button>
+              <button 
+                onClick={() => setShowGoalModal(true)}
+                className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Set Goals
+              </button>
+            </div>
+          </div>
+          
+          {showPlanScanner && (
+            <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+              <Scanner 
+                user={user} 
+                onLogout={handleLogout}
+                onNavigate={(screenId) => {
+                  if (screenId) setScreen(screenId)
+                }}
+                onClose={() => setShowPlanScanner(false)}
+              />
+            </div>
+          )}
+          
+          <div className="bg-gray-900 rounded-xl p-4 mb-4">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-white font-semibold">Today's Progress</h3>
+              <span className="text-xs text-gray-400">{totalCalories} / {dietGoals.calories} kcal</span>
+            </div>
+            <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
+              <div 
+                className="h-full bg-[#0F2C5C] rounded-full transition-all" 
+                style={{ width: `${Math.min((totalCalories / dietGoals.calories) * 100, 100)}%` }}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div>
+                <span className="text-red-400">{totalProtein}g</span>
+                <p className="text-gray-500">Protein</p>
+              </div>
+              <div>
+                <span className="text-amber-400">{totalCarbs}g</span>
+                <p className="text-gray-500">Carbs</p>
+              </div>
+              <div>
+                <span className="text-yellow-400">{totalFat}g</span>
+                <p className="text-gray-500">Fat</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <h3 className="text-white font-semibold">Today's Meals</h3>
+            {meals.map((meal) => (
+              <div key={meal.id} className="bg-gray-900 rounded-xl p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-white font-medium">{meal.name}</h4>
+                  <span className="text-xs text-gray-400">
+                    {meal.items.reduce((s, i) => s + (i.calories || 0), 0)} kcal
+                  </span>
+                </div>
+                {meal.items.length > 0 ? (
+                  <div className="space-y-2">
+                    {meal.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-sm">
+                        <span className="text-gray-300">{item.name}</span>
+                        <span className="text-[#0F2C5C]">{item.calories} kcal</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No items added yet</p>
+                )}
+                <button className="mt-2 text-[#0F2C5C] text-sm font-medium">+ Add Food</button>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {showGoalModal && (
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+            <div className="bg-gray-900 rounded-xl p-6 w-full max-w-sm">
+              <h3 className="text-white font-semibold text-lg mb-4">Set Daily Goals</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-gray-400 text-sm">Calories (kcal)</label>
+                  <input 
+                    type="number" 
+                    value={newGoal.calories}
+                    onChange={(e) => setNewGoal({...newGoal, calories: Number(e.target.value)})}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-400 text-sm">Protein (g)</label>
+                  <input 
+                    type="number" 
+                    value={newGoal.protein}
+                    onChange={(e) => setNewGoal({...newGoal, protein: Number(e.target.value)})}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-400 text-sm">Carbs (g)</label>
+                  <input 
+                    type="number" 
+                    value={newGoal.carbs}
+                    onChange={(e) => setNewGoal({...newGoal, carbs: Number(e.target.value)})}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-400 text-sm">Fat (g)</label>
+                  <input 
+                    type="number" 
+                    value={newGoal.fat}
+                    onChange={(e) => setNewGoal({...newGoal, fat: Number(e.target.value)})}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" onClick={() => setShowGoalModal(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={() => {
+                  setDietGoals(newGoal)
+                  setShowGoalModal(false)
+                }} className="flex-1 bg-[#0F2C5C]">
+                  Save
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Layout>
+    )
+  }
+
+  if (screen === 'settings') {
+    return (
+      <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
+        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
+          <h1 className="text-2xl font-bold text-white mb-4">Settings</h1>
+          
+          {user && (
+            <div className="bg-gray-900 rounded-xl p-4 mb-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-[#0F2C5C] rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">{user.name}</p>
+                  <p className="text-gray-500 text-sm">{user.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">
+              Account Settings
+            </button>
+            <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">
+              Notifications
+            </button>
+            <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">
+              Privacy
+            </button>
+            <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">
+              Help
+            </button>
+            <button onClick={handleLogout} className="w-full bg-gray-900 rounded-xl p-4 text-left text-red-500 font-medium flex items-center justify-between">
+              <LogOut className="w-5 h-5" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  return (
+    <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
+      <div className="flex-1 flex items-center justify-center p-6">
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    </Layout>
+  )
 }
 
 export default App
