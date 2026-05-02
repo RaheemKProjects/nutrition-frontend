@@ -595,7 +595,7 @@ function App() {
           
           <div className="bg-gray-900 rounded-xl p-4 mb-4">
             <h3 className="text-white font-semibold text-sm mb-3">Macronutrients</h3>
-            <div className="h-48">
+            <div className="h-48 min-h-[192px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
