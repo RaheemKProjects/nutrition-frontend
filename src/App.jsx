@@ -524,169 +524,166 @@ function App() {
       fat: dietGoals.fat - consumed.fat
     }
 
-    const weeklyData = [
-      { day: 'Mon', calories: 1850 },
-      { day: 'Tue', calories: 2100 },
-      { day: 'Wed', calories: 1650 },
-      { day: 'Thu', calories: 1920 },
-      { day: 'Fri', calories: 2200 },
-      { day: 'Sat', calories: 2400 },
-      { day: 'Sun', calories: 1316 },
-    ]
+    const mealIcons = {
+      'Breakfast': '🍳',
+      'Lunch': '🥗',
+      'Dinner': '🍽',
+      'Snacks': '🍎',
+    }
+
+    const quickAddMeals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks']
     
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    const weeklyCalories = weeklyData.map(d => d.calories)
-    const dailyAverage = weeklyCalories.reduce((a, b) => a + b, 0) / 7
-    
-    const macroData = [
-      { name: 'Protein', value: consumed.protein, color: '#ef4444' },
-      { name: 'Carbs', value: consumed.carbs, color: '#f59e0b' },
-      { name: 'Fat', value: consumed.fat, color: '#eab308' }
+    const aiInsights = [
+      { type: 'success', text: 'Your protein is on track — great job!' },
+      { type: 'warning', text: 'You\'ve only had 1 serving of vegetables today.' },
     ]
+
+    const greeting = () => {
+      const hour = new Date().getHours()
+      if (hour < 12) return 'Good morning'
+      if (hour < 17) return 'Good afternoon'
+      return 'Good evening'
+    }
     
-    const insights = [
-      { title: 'Start Tracking', description: 'Add meals to your plan to get personalized nutrition insights.', icon: Beef },
-      { title: 'Set Goals', description: 'Use the Set Goals button on the Plan page to customize your daily targets.', icon: Wheat },
-      { title: 'Track Progress', description: 'Monitor your daily calorie and macro intake on this page.', icon: Droplets },
-    ]
+    const formatTime = (index) => {
+      const times = ['7:00 AM', '12:30 PM', '6:30 PM', '3:00 PM']
+      return times[index] || ''
+    }
+    
+    const getTotalCalories = (mealIndex) => {
+      const meal = meals[mealIndex]
+      if (!meal || !meal.items) return 0
+      return meal.items.reduce((sum, item) => sum + (item.calories || 0), 0)
+    }
+
+    const calorieProgress = Math.min((consumed.calories / dietGoals.calories) * 100, 100)
+    const ringRadius = 90
+    const ringCircumference = 2 * Math.PI * ringRadius
+    const ringOffset = ringCircumference - (calorieProgress / 100) * ringCircumference
     
     return (
       <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
-          <h1 className="text-2xl font-bold text-white mb-6 mt-4">Analysis</h1>
-          
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="bg-gray-900 rounded-xl p-4">
-              <p className="text-xs text-gray-400 mb-1">Calories Today</p>
-              <p className="text-2xl font-bold text-orange-500">{consumed.calories}</p>
-              <p className="text-xs text-gray-500">/ {dietGoals.calories} kcal</p>
-            </div>
-            <div className="bg-gray-900 rounded-xl p-4">
-              <p className="text-xs text-gray-400 mb-1">Daily Average</p>
-              <p className="text-2xl font-bold text-[#0F2C5C]">{Math.round(dailyAverage)}</p>
-              <p className="text-xs text-gray-500">kcal / day</p>
-            </div>
+          {/* SECTION 1: HEADER */}
+          <div className="mb-6 mt-2">
+            <h1 className="text-3xl font-bold text-white">{greeting()} 👋</h1>
+            <p className="text-gray-400 mt-1 text-base">
+              You're {remaining.calories > 0 ? remaining.calories : 0} kcal away from your goal
+            </p>
           </div>
           
-          <div className="bg-gray-900 rounded-xl p-4 mb-4">
-            <h3 className="text-white font-semibold mb-3">Today</h3>
-            <div className="flex justify-between gap-1">
-              {weekdays.map((day, index) => {
-                const dayCalories = weeklyData[index].calories
-                const percentage = Math.min((dayCalories / dietGoals.calories) * 100, 100)
-                const isToday = index === new Date().getDay() - 1
-                return (
-                  <div key={day} className="flex flex-col items-center flex-1">
-                    <div className="w-8 h-20 bg-gray-800 rounded-lg relative overflow-hidden">
-                      <div 
-                        className="absolute bottom-0 w-full rounded-lg transition-all"
-                        style={{ 
-                          height: `${percentage}%`,
-                          background: isToday ? '#2563eb' : 'rgba(37, 99, 235, 0.25)'
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500 mt-1">{day}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-          
-          <div className="bg-gray-900 rounded-xl p-4 mb-4">
-            <h3 className="text-white font-semibold text-sm mb-3">Macronutrients</h3>
-            <div className="h-48 min-h-[192px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={macroData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={60}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {macroData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px' }}
-                    itemStyle={{ color: '#fff' }}
+          {/* SECTION 2: CALORIE RING */}
+          <div className="bg-[#161B22] rounded-2xl p-6 mb-4 border border-[#1E2530]">
+            <div className="flex flex-col items-center">
+              <div className="relative w-52 h-52">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 220 220">
+                  <circle
+                    cx="110"
+                    cy="110"
+                    r={ringRadius}
+                    fill="none"
+                    stroke="#1E2530"
+                    strokeWidth="14"
                   />
-                </PieChart>
-              </ResponsiveContainer>
+                  <circle
+                    cx="110"
+                    cy="110"
+                    r={ringRadius}
+                    fill="none"
+                    stroke="#F97316"
+                    strokeWidth="14"
+                    strokeLinecap="round"
+                    strokeDasharray={ringCircumference}
+                    strokeDashoffset={ringOffset}
+                    className="transition-all duration-1000 ease-out"
+                    style={{
+                      filter: 'drop-shadow(0 0 8px rgba(249, 115, 22, 0.5))',
+                    }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-5xl font-bold text-white">{consumed.calories}</span>
+                  <span className="text-gray-500 text-sm">of {dietGoals.calories} kcal</span>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {macroData.map((macro) => (
-                <div key={macro.name} className="text-center">
-                  <span className="text-sm font-medium" style={{ color: macro.color }}>{macro.value}g</span>
-                  <p className="text-xs text-gray-500">{macro.name}</p>
+            
+            {/* Macros Pills */}
+            <div className="flex justify-center gap-3 mt-4">
+              <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
+                <span className="text-red-400 font-semibold">{consumed.protein}g</span>
+                <span className="text-gray-500 text-xs ml-1">Protein</span>
+              </div>
+              <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
+                <span className="text-amber-400 font-semibold">{consumed.carbs}g</span>
+                <span className="text-gray-500 text-xs ml-1">Carbs</span>
+              </div>
+              <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
+                <span className="text-yellow-400 font-semibold">{consumed.fat}g</span>
+                <span className="text-gray-500 text-xs ml-1">Fat</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* SECTION 3: RECENT MEALS */}
+          <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
+            <h3 className="text-white font-semibold mb-4">Recent Meals</h3>
+            <div className="space-y-3">
+              {meals.slice(0, 4).map((meal, index) => (
+                <div key={meal.id} className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{mealIcons[meal.name] || '🍽'}</span>
+                    <div>
+                      <p className="text-white text-sm font-medium">{meal.name}</p>
+                      <p className="text-gray-500 text-xs">{formatTime(index)}</p>
+                    </div>
+                  </div>
+                  <span className="text-orange-500 font-medium">{getTotalCalories(index)} kcal</span>
                 </div>
               ))}
             </div>
+            <button className="w-full mt-4 py-2 text-orange-500 text-sm font-medium border border-dashed border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors">
+              + Add meal
+            </button>
           </div>
           
-          <div className="bg-gray-900 rounded-xl p-4 mb-4">
-            <h3 className="text-white font-semibold mb-3">AI Nutritional Insights</h3>
+          {/* SECTION 4: AI NUTRITIONAL INSIGHTS */}
+          <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
+            <h3 className="text-white font-semibold mb-4">AI Insights</h3>
             <div className="space-y-3">
-              {insights.map((insight, index) => {
-                const Icon = insight.icon
-                return (
-                  <div key={index} className="flex gap-3 p-3 bg-gray-800 rounded-lg">
-                    <div className="w-10 h-10 bg-[#0F2C5C]/20 rounded-lg flex items-center justify-center shrink-0">
-                      <Icon className="w-5 h-5 text-[#0F2C5C]" />
-                    </div>
-                    <div>
-                      <p className="text-white text-sm font-medium">{insight.title}</p>
-                      <p className="text-gray-400 text-xs mt-1">{insight.description}</p>
-                    </div>
-                  </div>
-                )
-              })}
+              {aiInsights.map((insight, index) => (
+                <div 
+                  key={index} 
+                  className={`p-4 rounded-xl ${
+                    insight.type === 'success' 
+                      ? 'bg-green-500/10 border border-green-500/30' 
+                      : 'bg-amber-500/10 border border-amber-500/30'
+                  }`}
+                >
+                  <p className={`text-sm ${insight.type === 'success' ? 'text-green-400' : 'text-amber-400'}`}>
+                    {insight.text}
+                  </p>
+                </div>
+              ))}
             </div>
+            <button className="w-full mt-4 py-3 text-orange-500 text-sm font-medium flex items-center justify-center gap-2 hover:bg-orange-500/10 rounded-lg transition-colors">
+              Ask AI for advice →
+            </button>
           </div>
           
-          <div className="bg-gray-900 rounded-xl p-4">
-            <h3 className="text-white font-semibold mb-3">Recent Meals</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center py-2 border-b border-gray-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Flame className="w-5 h-5 text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm">Grilled Chicken</p>
-                    <p className="text-gray-500 text-xs">12:30 PM</p>
-                  </div>
-                </div>
-                <span className="text-orange-500 font-medium">450 kcal</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
-                    <Wheat className="w-5 h-5 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm">Brown Rice</p>
-                    <p className="text-gray-500 text-xs">7:00 AM</p>
-                  </div>
-                </div>
-                <span className="text-amber-500 font-medium">320 kcal</span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                    <Beef className="w-5 h-5 text-red-500" />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm">Salmon</p>
-                    <p className="text-gray-500 text-xs">6:30 PM</p>
-                  </div>
-                </div>
-                <span className="text-red-500 font-medium">470 kcal</span>
-              </div>
+          {/* SECTION 5: QUICK ACTIONS */}
+          <div className="mb-4">
+            <h3 className="text-white font-semibold mb-4">Quick Add</h3>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {quickAddMeals.map((mealType) => (
+                <button
+                  key={mealType}
+                  className="flex-shrink-0 bg-[#161B22] px-5 py-3 rounded-xl border border-[#1E2530] hover:border-orange-500/50 transition-colors"
+                >
+                  <span className="text-2xl block mb-1">{mealIcons[mealType]}</span>
+                  <span className="text-gray-400 text-xs">{mealType}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
