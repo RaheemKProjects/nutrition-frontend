@@ -90,6 +90,31 @@ const mealTypeIcons = {
   'Snacks': { icon: MealIconSnack, quickAddIcon: QuickAddIconSnack },
 }
 
+const FilterIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </svg>
+)
+
+const BarcodeIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+    <path d="M3 5v14" />
+    <path d="M8 5v14" />
+    <path d="M12 5v14" />
+    <path d="M17 5v14" />
+    <path d="M21 5v14" />
+  </svg>
+)
+
+const ClipboardIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+    <path d="M9 12h6" />
+    <path d="M9 16h6" />
+  </svg>
+)
+
 const mockNutritionData = {
   calories: 650,
   protein: 48,
@@ -142,6 +167,17 @@ function App() {
   const [showScanner, setShowScanner] = useState(false)
   const [showPlanScanner, setShowPlanScanner] = useState(false)
   const [newGoal, setNewGoal] = useState({ ...dietGoals })
+  
+  const [logbookEntries, setLogbookEntries] = useState([
+    { id: '1', name: 'Grilled Chicken', meal: 'dinner', calories: 450, protein: 42, carbs: 8, fat: 28, timestamp: new Date(), scannedViaBarcode: true },
+    { id: '2', name: 'Brown Rice', meal: 'lunch', calories: 216, protein: 5, carbs: 45, fat: 2, timestamp: new Date(Date.now() - 86400000), scannedViaBarcode: false },
+    { id: '3', name: 'Oatmeal', meal: 'breakfast', calories: 150, protein: 5, carbs: 27, fat: 3, timestamp: new Date(Date.now() - 172800000), scannedViaBarcode: false },
+    { id: '4', name: 'Salmon', meal: 'dinner', calories: 400, protein: 40, carbs: 0, fat: 22, timestamp: new Date(Date.now() - 259200000), scannedViaBarcode: true },
+    { id: '5', name: 'Banana', meal: 'snack', calories: 105, protein: 1, carbs: 27, fat: 0, timestamp: new Date(Date.now() - 345600000), scannedViaBarcode: false },
+  ])
+  const [expandedEntry, setExpandedEntry] = useState(null)
+  const [logbookFilter, setLogbookFilter] = useState('All')
+  const [logbookSearch, setLogbookSearch] = useState('')
   
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -770,12 +806,266 @@ function App() {
   }
 
 if (screen === 'analysis') {
+    const macroData = [
+      { name: 'Protein', value: 48, color: '#ef4444' },
+      { name: 'Carbs', value: 80, color: '#f59e0b' },
+      { name: 'Fat', value: 42, color: '#eab308' }
+    ]
+    
+    const formatDateHeader = (date) => {
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const yesterday = new Date(today.getTime() - 86400000)
+      const entryDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+      
+      if (entryDate.getTime() === today.getTime()) return 'Today'
+      if (entryDate.getTime() === yesterday.getTime()) return 'Yesterday'
+      
+      return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
+    }
+    
+    const formatTime = (date) => {
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    }
+    
+    const getMealIcon = (mealType) => {
+      const mapping = {
+        'breakfast': MealIconBreakfast,
+        'lunch': MealIconLunch,
+        'dinner': MealIconDinner,
+        'snack': MealIconSnack,
+      }
+      return mapping[mealType] || MealIconSnack
+    }
+    
+    const filteredEntries = logbookEntries.filter(entry => {
+      if (logbookFilter !== 'All' && logbookFilter !== 'Barcode') {
+        if (entry.meal.toLowerCase() !== logbookFilter.toLowerCase()) return false
+      }
+      if (logbookFilter === 'Barcode' && !entry.scannedViaBarcode) return false
+      if (logbookSearch && !entry.name.toLowerCase().includes(logbookSearch.toLowerCase())) return false
+      return true
+    })
+    
+    const groupedEntries = filteredEntries.reduce((groups, entry) => {
+      const header = formatDateHeader(entry.timestamp)
+      if (!groups[header]) groups[header] = []
+      groups[header].push(entry)
+      return groups
+    }, {})
+    
+    const toggleExpand = (id) => {
+      setExpandedEntry(expandedEntry === id ? null : id)
+    }
+    
+    const filterOptions = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Barcode']
+    
+    const getMealLabel = (meal) => {
+      return meal.charAt(0).toUpperCase() + meal.slice(1)
+    }
+    
+    const weekEntries = logbookEntries.filter(e => {
+      const weekAgo = new Date(Date.now() - 7 * 86400000)
+      return e.timestamp >= weekAgo
+    })
+    const avgCalories = weekEntries.length > 0 
+      ? Math.round(weekEntries.reduce((s, e) => s + e.calories, 0) / 7) 
+      : 0
+    const mostLogged = weekEntries.length > 0 
+      ? Object.entries(weekEntries.reduce((counts, e) => {
+          counts[e.name] = (counts[e.name] || 0) + 1
+          return counts
+        }, {})).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
+      : 'None'
+    
     return (
       <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 pt-16">
-          <BarChart3 className="w-16 h-16 text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">Coming soon...</h2>
-          <p className="text-gray-500 text-center">Analysis features will be available here.</p>
+        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
+          <h1 className="text-2xl font-bold text-white mb-4">Analysis</h1>
+          
+          {/* Macronutrients Donut Chart */}
+          <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
+            <h3 className="text-white font-semibold mb-4">Macronutrients</h3>
+            <div className="h-48 min-h-[192px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={macroData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={70}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {macroData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px' }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {macroData.map((macro) => (
+                <div key={macro.name} className="text-center">
+                  <span className="text-sm font-medium" style={{ color: macro.color }}>{macro.value}g</span>
+                  <p className="text-xs text-gray-500">{macro.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Food Logbook Section */}
+          <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white font-semibold">Food Logbook</h3>
+              <button className="p-2">
+                <FilterIcon />
+              </button>
+            </div>
+            
+            {/* Summary Row */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-[#0D1117] rounded-lg p-3 text-center">
+                <p className="text-white font-semibold text-lg">{weekEntries.length}</p>
+                <p className="text-gray-500 text-xs">logged this week</p>
+              </div>
+              <div className="bg-[#0D1117] rounded-lg p-3 text-center">
+                <p className="text-white font-semibold text-lg">{avgCalories}</p>
+                <p className="text-gray-500 text-xs">kcal / day</p>
+              </div>
+              <div className="bg-[#0D1117] rounded-lg p-3 text-center">
+                <p className="text-orange-500 font-semibold text-xs truncate">{mostLogged}</p>
+                <p className="text-gray-500 text-xs">most logged</p>
+              </div>
+            </div>
+            
+            {/* Search and Filters */}
+            <input
+              type="text"
+              placeholder="Search foods..."
+              value={logbookSearch}
+              onChange={(e) => setLogbookSearch(e.target.value)}
+              className="w-full bg-[#0D1117] border border-[#1E2530] rounded-lg px-3 py-2 text-white text-sm mb-3 placeholder-gray-500"
+            />
+            
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+              {filterOptions.map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setLogbookFilter(filter)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    logbookFilter === filter
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-[#1E2530] text-gray-400'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+            
+            {/* Log Entries */}
+            {filteredEntries.length === 0 ? (
+              <div className="flex flex-col items-center py-8">
+                <ClipboardIcon />
+                <p className="text-white text-sm mt-4">No foods logged yet</p>
+                <p className="text-gray-500 text-xs mt-1">Scan or search foods to start tracking</p>
+              </div>
+            ) : (
+              Object.entries(groupedEntries).map(([dateHeader, entries]) => (
+                <div key={dateHeader} className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs text-gray-500">{dateHeader}</span>
+                    <div className="flex-1 h-px bg-[#1E2530]" />
+                  </div>
+                  <div className="space-y-2">
+                    {entries.map((entry) => {
+                      const MealIcon = getMealIcon(entry.meal)
+                      const isExpanded = expandedEntry === entry.id
+                      return (
+                        <div 
+                          key={entry.id}
+                          className="bg-[#161B22] rounded-xl p-3 border border-[#1E2530] overflow-hidden transition-all duration-300"
+                        >
+                          <div 
+                            className="flex items-center justify-between cursor-pointer"
+                            onClick={() => toggleExpand(entry.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-[#EFF3FB] rounded-lg flex items-center justify-center">
+                                <MealIcon />
+                              </div>
+                              <div>
+                                <p className="text-white text-sm font-medium">{entry.name}</p>
+                                <p className="text-gray-500 text-xs">{getMealLabel(entry.meal)} - {formatTime(entry.timestamp)}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-orange-500 text-sm font-semibold">{entry.calories} kcal</p>
+                              {entry.scannedViaBarcode && (
+                                <div className="flex justify-end mt-1">
+                                  <BarcodeIcon />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Expanded Macro Breakdown */}
+                          {isExpanded && (
+                            <div className="mt-3 pt-3 border-t border-[#1E2530]">
+                              <div className="flex items-center gap-3">
+                                <div className="flex-1">
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className="text-red-400">Protein</span>
+                                    <span className="text-gray-400">{entry.protein}g</span>
+                                  </div>
+                                  <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full bg-red-500 rounded-full"
+                                      style={{ width: `${Math.min((entry.protein / 60) * 100, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className="text-amber-400">Carbs</span>
+                                    <span className="text-gray-400">{entry.carbs}g</span>
+                                  </div>
+                                  <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full bg-amber-500 rounded-full"
+                                      style={{ width: `${Math.min((entry.carbs / 100) * 100, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className="text-yellow-400">Fat</span>
+                                    <span className="text-gray-400">{entry.fat}g</span>
+                                  </div>
+                                  <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full bg-yellow-500 rounded-full"
+                                      style={{ width: `${Math.min((entry.fat / 50) * 100, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </Layout>
     )
