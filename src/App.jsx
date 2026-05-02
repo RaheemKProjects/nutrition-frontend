@@ -15,6 +15,81 @@ import {
 } from './components/ui/drawer'
 import './index.css'
 
+const MealIconBreakfast = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+    <line x1="6" y1="1" x2="6" y2="4" />
+    <line x1="10" y1="1" x2="10" y2="4" />
+    <line x1="14" y1="1" x2="14" y2="4" />
+  </svg>
+)
+
+const MealIconLunch = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M4 6h16" />
+    <path d="M4 10h16" />
+    <circle cx="8" cy="14" r="2" />
+  </svg>
+)
+
+const MealIconDinner = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+    <path d="M7 2v20" />
+    <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+  </svg>
+)
+
+const MealIconSnack = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M12 22c4.97 0 9-4.03 9-9 0-4.97-9-13-9-13S3 8.03 3 13c0 4.97 4.03 9 9 9z" />
+    <path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+    <path d="M12 9V4" />
+  </svg>
+)
+
+const QuickAddIconBreakfast = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+    <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+    <line x1="6" y1="1" x2="6" y2="4" />
+    <line x1="10" y1="1" x2="10" y2="4" />
+    <line x1="14" y1="1" x2="14" y2="4" />
+  </svg>
+)
+
+const QuickAddIconLunch = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+    <path d="M4 6h16" />
+    <path d="M4 10h16" />
+    <circle cx="8" cy="14" r="2" />
+  </svg>
+)
+
+const QuickAddIconDinner = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+    <path d="M7 2v20" />
+    <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+  </svg>
+)
+
+const QuickAddIconSnack = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+    <path d="M12 22c4.97 0 9-4.03 9-9 0-4.97-9-13-9-13S3 8.03 3 13c0 4.97 4.03 9 9 9z" />
+    <path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+    <path d="M12 9V4" />
+  </svg>
+)
+
+const mealTypeIcons = {
+  'Breakfast': { icon: MealIconBreakfast, quickAddIcon: QuickAddIconBreakfast },
+  'Lunch': { icon: MealIconLunch, quickAddIcon: QuickAddIconLunch },
+  'Dinner': { icon: MealIconDinner, quickAddIcon: QuickAddIconDinner },
+  'Snacks': { icon: MealIconSnack, quickAddIcon: QuickAddIconSnack },
+}
+
 const mockNutritionData = {
   calories: 650,
   protein: 48,
@@ -524,18 +599,11 @@ function App() {
       fat: dietGoals.fat - consumed.fat
     }
 
-    const mealIcons = {
-      'Breakfast': '🍳',
-      'Lunch': '🥗',
-      'Dinner': '🍽',
-      'Snacks': '🍎',
-    }
-
     const quickAddMeals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks']
     
     const aiInsights = [
       { type: 'success', text: 'Your protein is on track — great job!' },
-      { type: 'warning', text: 'You\'ve only had 1 serving of vegetables today.' },
+      { type: 'warning', text: 'You have only had 1 serving of vegetables today.' },
     ]
 
     const greeting = () => {
@@ -566,9 +634,9 @@ function App() {
         <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
           {/* SECTION 1: HEADER */}
           <div className="mb-6 mt-2">
-            <h1 className="text-3xl font-bold text-white">{greeting()} 👋</h1>
+            <h1 className="text-3xl font-bold text-white">{greeting()}</h1>
             <p className="text-gray-400 mt-1 text-base">
-              You're {remaining.calories > 0 ? remaining.calories : 0} kcal away from your goal
+              You are {remaining.calories > 0 ? remaining.calories : 0} kcal away from your goal
             </p>
           </div>
           
@@ -629,18 +697,24 @@ function App() {
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4">Recent Meals</h3>
             <div className="space-y-3">
-              {meals.slice(0, 4).map((meal, index) => (
-                <div key={meal.id} className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{mealIcons[meal.name] || '🍽'}</span>
-                    <div>
-                      <p className="text-white text-sm font-medium">{meal.name}</p>
-                      <p className="text-gray-500 text-xs">{formatTime(index)}</p>
+              {meals.slice(0, 4).map((meal, index) => {
+                const iconData = mealTypeIcons[meal.name] || mealTypeIcons['Snacks']
+                const IconComponent = iconData.icon
+                return (
+                  <div key={meal.id} className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-[#EFF3FB] rounded-lg flex items-center justify-center">
+                        <IconComponent />
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-medium">{meal.name}</p>
+                        <p className="text-gray-500 text-xs">{formatTime(index)}</p>
+                      </div>
                     </div>
+                    <span className="text-orange-500 font-medium">{getTotalCalories(index)} kcal</span>
                   </div>
-                  <span className="text-orange-500 font-medium">{getTotalCalories(index)} kcal</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
             <button className="w-full mt-4 py-2 text-orange-500 text-sm font-medium border border-dashed border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors">
               + Add meal
@@ -675,15 +749,19 @@ function App() {
           <div className="mb-4">
             <h3 className="text-white font-semibold mb-4">Quick Add</h3>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {quickAddMeals.map((mealType) => (
-                <button
-                  key={mealType}
-                  className="flex-shrink-0 bg-[#161B22] px-5 py-3 rounded-xl border border-[#1E2530] hover:border-orange-500/50 transition-colors"
-                >
-                  <span className="text-2xl block mb-1">{mealIcons[mealType]}</span>
-                  <span className="text-gray-400 text-xs">{mealType}</span>
-                </button>
-              ))}
+              {quickAddMeals.map((mealType) => {
+                const iconData = mealTypeIcons[mealType]
+                const QuickIcon = iconData ? iconData.quickAddIcon : QuickAddIconSnack
+                return (
+                  <button
+                    key={mealType}
+                    className="flex-shrink-0 bg-[#161B22] px-4 py-3 rounded-xl border border-[#1E2530] hover:border-orange-500/50 transition-colors flex flex-col items-center min-w-[80px]"
+                  >
+                    <QuickIcon />
+                    <span className="text-gray-400 text-xs mt-2">{mealType}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
