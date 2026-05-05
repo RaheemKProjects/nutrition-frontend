@@ -4,6 +4,9 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { Button } from './components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import Scanner from './Scanner'
+import AddMealModal from './components/AddMealModal'
+import FoodDetailSheet from './components/FoodDetailSheet'
+import Toast from './components/Toast'
 import {
   Drawer,
   DrawerContent,
@@ -147,6 +150,10 @@ function App() {
   ])
 
   const [showGoalModal, setShowGoalModal] = useState(false)
+  const [showAddMeal, setShowAddMeal] = useState(false)
+  const [selectedFood, setSelectedFood] = useState(null)
+  const [toastMessage, setToastMessage] = useState('')
+  const [showToast, setShowToast] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showPlanScanner, setShowPlanScanner] = useState(false)
   const [newGoal, setNewGoal] = useState({ ...dietGoals })
@@ -484,6 +491,42 @@ function App() {
     setNutritionResult(null)
   }
 
+  const handleFoodSelect = (food) => {
+    setSelectedFood(food)
+  }
+
+  const handleFoodLog = (foodData) => {
+    const newEntry = {
+      id: Date.now().toString(),
+      name: foodData.name,
+      brand: foodData.brand || null,
+      meal: foodData.meal,
+      calories: foodData.calories,
+      protein: foodData.protein,
+      carbs: foodData.carbs,
+      fat: foodData.fat,
+      quantity: foodData.quantity,
+      unit: foodData.unit,
+      timestamp: foodData.timestamp || new Date(),
+      scannedViaBarcode: !!foodData.id && !foodData.name?.includes('AI'),
+      scannedViaCameraAI: false,
+      imageUri: null
+    }
+    
+    setLogbookEntries([newEntry, ...logbookEntries])
+    setToastMessage(`${foodData.name} added to ${foodData.meal}`)
+    setShowToast(true)
+  }
+
+  const showToastMessage = (message) => {
+    setToastMessage(message)
+    setShowToast(true)
+  }
+
+  const closeToast = () => {
+    setShowToast(false)
+  }
+
   useEffect(() => { checkCameraPermission() }, [])
   useEffect(() => {
     if (screen === 'camera' || screen === 'home') startCamera()
@@ -654,7 +697,10 @@ function App() {
                 })}
               </div>
             )}
-            <button className="w-full mt-4 py-2 text-orange-500 text-sm font-medium border border-dashed border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors">
+            <button 
+              onClick={() => setShowAddMeal(true)}
+              className="w-full mt-4 py-2 text-orange-500 text-sm font-medium border border-dashed border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors"
+            >
               + Add meal
             </button>
           </div>
@@ -1222,6 +1268,23 @@ function App() {
       <div className="flex-1 flex items-center justify-center p-6">
         <p className="text-gray-400">Loading...</p>
       </div>
+
+      <AddMealModal
+        isOpen={showAddMeal}
+        onClose={() => setShowAddMeal(false)}
+        onFoodSelect={handleFoodSelect}
+        onLoading={() => {}}
+        onError={() => {}}
+      />
+
+      <FoodDetailSheet
+        food={selectedFood}
+        isOpen={!!selectedFood}
+        onClose={() => setSelectedFood(null)}
+        onLog={handleFoodLog}
+      />
+
+      <Toast message={toastMessage} isVisible={showToast} onClose={closeToast} />
     </Layout>
   )
 }
