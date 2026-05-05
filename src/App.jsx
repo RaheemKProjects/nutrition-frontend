@@ -15,6 +15,8 @@ import {
 } from './components/ui/drawer'
 import './index.css'
 
+const API_URL = 'https://food-ai-app-ud2m.onrender.com'
+
 const MealIconBreakfast = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="#8A8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
     <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
@@ -115,32 +117,13 @@ const ClipboardIcon = () => (
   </svg>
 )
 
-const mockNutritionData = {
-  calories: 650,
-  protein: 48,
-  carbs: 12,
-  fat: 42,
-  fiber: 3,
-  sugar: 2,
-  sodium: 890,
-  cholesterol: 145,
-  weight: 285,
-  serving: "1 plate (285g)",
-  nutrients: [
-    { name: "Iron", amount: 4.2, unit: "mg", daily: 23 },
-    { name: "Vitamin A", amount: 95, unit: "IU", daily: 2 },
-    { name: "Vitamin C", amount: 0, unit: "mg", daily: 0 },
-    { name: "Calcium", amount: 28, unit: "mg", daily: 3 },
-    { name: "Potassium", amount: 420, unit: "mg", daily: 12 },
-  ]
-}
-
 function App() {
   const [screen, setScreen] = useState('home')
   const [capturedImage, setCapturedImage] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(true)
   const [cameraPermission, setCameraPermission] = useState('prompt')
-  
+  const [nutritionResult, setNutritionResult] = useState(null)
+
   const [user, setUser] = useState(null)
   const [authMode, setAuthMode] = useState('login')
   const [authEmail, setAuthEmail] = useState('')
@@ -148,73 +131,67 @@ function App() {
   const [authName, setAuthName] = useState('')
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
-  
+
   const [dietGoals, setDietGoals] = useState({
     calories: 2000,
     protein: 120,
     carbs: 250,
     fat: 70
   })
-  
+
   const [meals, setMeals] = useState([
     { id: 1, name: 'Breakfast', items: [] },
     { id: 2, name: 'Lunch', items: [] },
     { id: 3, name: 'Dinner', items: [] },
     { id: 4, name: 'Snacks', items: [] }
   ])
-  
+
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showPlanScanner, setShowPlanScanner] = useState(false)
   const [newGoal, setNewGoal] = useState({ ...dietGoals })
-  
+
   const [logbookEntries, setLogbookEntries] = useState([])
   const [expandedEntry, setExpandedEntry] = useState(null)
   const [logbookFilter, setLogbookFilter] = useState('All')
   const [logbookSearch, setLogbookSearch] = useState('')
-  
+
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
-  
+
   useEffect(() => {
     const savedUser = localStorage.getItem('nutrisnap_user')
     if (savedUser) {
       setUser(JSON.parse(savedUser))
     }
   }, [])
-  
+
   const handleRegister = () => {
     setAuthLoading(true)
     setAuthError('')
-    
     setTimeout(() => {
       if (!authEmail || !authPassword || !authName) {
         setAuthError('Please fill in all fields')
         setAuthLoading(false)
         return
       }
-      
       if (!authEmail.includes('@')) {
         setAuthError('Please enter a valid email')
         setAuthLoading(false)
         return
       }
-      
       if (authPassword.length < 6) {
         setAuthError('Password must be at least 6 characters')
         setAuthLoading(false)
         return
       }
-      
       const users = JSON.parse(localStorage.getItem('nutrisnap_users') || '[]')
-      
       if (users.find(u => u.email === authEmail)) {
         setAuthError('Email already registered')
         setAuthLoading(false)
         return
       }
-      
       const newUser = {
         id: Date.now(),
         name: authName,
@@ -222,44 +199,38 @@ function App() {
         password: authPassword,
         createdAt: new Date().toISOString()
       }
-      
       users.push(newUser)
       localStorage.setItem('nutrisnap_users', JSON.stringify(users))
-      
       localStorage.setItem('nutrisnap_user', JSON.stringify(newUser))
       setUser(newUser)
       setAuthLoading(false)
       setScreen('home')
     }, 1000)
   }
-  
+
   const handleLogin = () => {
     setAuthLoading(true)
     setAuthError('')
-    
     setTimeout(() => {
       if (!authEmail || !authPassword) {
         setAuthError('Please enter email and password')
         setAuthLoading(false)
         return
       }
-      
       const users = JSON.parse(localStorage.getItem('nutrisnap_users') || '[]')
       const foundUser = users.find(u => u.email === authEmail && u.password === authPassword)
-      
       if (!foundUser) {
         setAuthError('Invalid email or password')
         setAuthLoading(false)
         return
       }
-      
       localStorage.setItem('nutrisnap_user', JSON.stringify(foundUser))
       setUser(foundUser)
       setAuthLoading(false)
       setScreen('home')
     }, 1000)
   }
-  
+
   const handleLogout = () => {
     localStorage.removeItem('nutrisnap_user')
     setUser(null)
@@ -268,7 +239,7 @@ function App() {
     setAuthName('')
     setScreen('login')
   }
-  
+
   const AuthScreen = () => (
     <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm">
@@ -278,7 +249,6 @@ function App() {
             {authMode === 'login' ? 'Welcome back!' : 'Create your account'}
           </p>
         </div>
-        
         <div className="bg-gray-900 rounded-xl p-6 space-y-4">
           {authMode === 'register' && (
             <div className="relative">
@@ -292,7 +262,6 @@ function App() {
               />
             </div>
           )}
-          
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <input
@@ -303,7 +272,6 @@ function App() {
               className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#0F2C5C]"
             />
           </div>
-          
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <input
@@ -314,11 +282,9 @@ function App() {
               className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#0F2C5C]"
             />
           </div>
-          
           {authError && (
             <p className="text-red-500 text-sm text-center">{authError}</p>
           )}
-          
           <Button
             onClick={authMode === 'login' ? handleLogin : handleRegister}
             disabled={authLoading}
@@ -333,7 +299,6 @@ function App() {
               </>
             )}
           </Button>
-          
           <div className="text-center pt-4">
             <button
               onClick={() => {
@@ -342,8 +307,8 @@ function App() {
               }}
               className="text-gray-400 text-sm hover:text-white"
             >
-              {authMode === 'login' 
-                ? "Don't have an account? Sign up" 
+              {authMode === 'login'
+                ? "Don't have an account? Sign up"
                 : 'Already have an account? Sign in'}
             </button>
           </div>
@@ -458,44 +423,65 @@ function App() {
   }
 
   const confirmPicture = async () => {
-    setScreen('loading')
-    try {
-      const base64Image = capturedImage.replace(/^data:image\/\w+;base64,/, '')
+  setScreen('loading')
+  try {
+    // Get image element from canvas
+    const canvas = canvasRef.current
+    if (!canvas) throw new Error('No image captured')
 
-      const response = await fetch('https://food-ai-app-ud2m.onrender.com/image-recognition', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_app_id: { user_id: 'clarifai', app_id: 'main' },
-          inputs: [{ data: { image: { base64: base64Image } } }],
-        }),
-      })
+    // Use TensorFlow MobileNet instead of Clarifai
+    const { classifyFood } = await import('./services/tensorflowRecognition')
+    const foodPredictions = await classifyFood(canvas)
+    console.log('Food predictions:', foodPredictions)
 
-      if (!response.ok) {
-        throw new Error('API request failed')
-      }
-
-      const data = await response.json()
-      
-      if (data && data.status && data.status.code === 10000) {
-        setScreen('results')
-        setDrawerOpen(true)
-      } else {
-        alert('Unable to analyze this image. The food recognition service may not support this type of image. Please try a different photo.')
-        setScreen('preview')
-      }
-
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Unable to analyze this image. The food recognition service may not support this image type. Please try a different photo with clearer food visibility.')
-      setScreen('preview')
+    if (!foodPredictions || foodPredictions.length === 0) {
+      alert('No food detected. Please take a photo of food.')
+      setScreen('home')
+      return
     }
+
+    const topResult = foodPredictions[0]
+    setNutritionResult(topResult)
+
+    // Add to logbook
+    setLogbookEntries(prev => [{
+      id: Date.now(),
+      name: topResult.name,
+      calories: topResult.nutrition.calories,
+      protein: parseFloat(topResult.nutrition.protein) || 0,
+      carbs: parseFloat(topResult.nutrition.carbs) || 0,
+      fat: parseFloat(topResult.nutrition.fat) || 0,
+      meal: 'snack',
+      timestamp: new Date(),
+      scannedViaBarcode: false,
+    }, ...prev])
+
+    setScreen('results')
+    setDrawerOpen(true)
+
+    // Log to backend
+    await fetch(`${API_URL}/log-usage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        foodName: topResult.name,
+        calories: topResult.nutrition.calories,
+        timestamp: new Date().toISOString(),
+      }),
+    })
+
+  } catch (error) {
+    console.error('Error:', error)
+    alert('Something went wrong. Please try again.')
+    setScreen('preview')
   }
+}
 
   const resetApp = () => {
     setScreen('home')
     setCapturedImage(null)
     setDrawerOpen(false)
+    setNutritionResult(null)
   }
 
   useEffect(() => { checkCameraPermission() }, [])
@@ -504,13 +490,8 @@ function App() {
     return () => stopCamera()
   }, [screen])
 
-  if (screen === 'login') {
-    return <AuthScreen />
-  }
-
-  if (screen === 'register') {
-    return <AuthScreen />
-  }
+  if (screen === 'login') return <AuthScreen />
+  if (screen === 'register') return <AuthScreen />
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -532,14 +513,11 @@ function App() {
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = activeTab === item.id
-          
           return (
             <button
               key={item.id}
               type="button"
-              onClick={() => {
-                onTabClick(item.id)
-              }}
+              onClick={() => onTabClick(item.id)}
               className={`flex flex-col items-center justify-center py-2 px-4 ${isActive ? 'text-white' : 'text-gray-500'}`}
               style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
@@ -553,22 +531,16 @@ function App() {
   )
 
   if (screen === 'home') {
-    const totalConsumed = meals.reduce((sum, meal) => 
+    const totalConsumed = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
-    const totalProtein = meals.reduce((sum, meal) => 
+    const totalProtein = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
-    const totalCarbs = meals.reduce((sum, meal) => 
+    const totalCarbs = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
-    const totalFat = meals.reduce((sum, meal) => 
+    const totalFat = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
-    
-    const consumed = {
-      calories: totalConsumed,
-      protein: totalProtein,
-      carbs: totalCarbs,
-      fat: totalFat
-    }
-    
+
+    const consumed = { calories: totalConsumed, protein: totalProtein, carbs: totalCarbs, fat: totalFat }
     const remaining = {
       calories: dietGoals.calories - consumed.calories,
       protein: dietGoals.protein - consumed.protein,
@@ -577,7 +549,6 @@ function App() {
     }
 
     const quickAddMeals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks']
-    
     const hasAnyMeals = meals.some(m => m.items && m.items.length > 0)
     const aiInsights = hasAnyMeals ? [
       { type: 'success', text: 'Your protein is on track.' },
@@ -592,12 +563,12 @@ function App() {
       if (hour < 17) return 'Good afternoon'
       return 'Good evening'
     }
-    
+
     const formatTime = (index) => {
       const times = ['7:00 AM', '12:30 PM', '6:30 PM', '3:00 PM']
       return times[index] || ''
     }
-    
+
     const getTotalCalories = (mealIndex) => {
       const meal = meals[mealIndex]
       if (!meal || !meal.items) return 0
@@ -608,43 +579,27 @@ function App() {
     const ringRadius = 90
     const ringCircumference = 2 * Math.PI * ringRadius
     const ringOffset = ringCircumference - (calorieProgress / 100) * ringCircumference
-    
+
     return (
       <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
+        <div className="flex-1 flex flex-col p-4 pt-16 pb-28 overflow-y-auto">
           <div className="mb-6 mt-2">
             <h1 className="text-3xl font-bold text-white">{greeting()}</h1>
             <p className="text-gray-400 mt-1 text-base">
               You are {remaining.calories > 0 ? remaining.calories : 0} kcal away from your goal
             </p>
           </div>
-          
+
           <div className="bg-[#161B22] rounded-2xl p-6 mb-4 border border-[#1E2530]">
             <div className="flex flex-col items-center">
               <div className="relative w-52 h-52">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 220 220">
+                  <circle cx="110" cy="110" r={ringRadius} fill="none" stroke="#1E2530" strokeWidth="14" />
                   <circle
-                    cx="110"
-                    cy="110"
-                    r={ringRadius}
-                    fill="none"
-                    stroke="#1E2530"
-                    strokeWidth="14"
-                  />
-                  <circle
-                    cx="110"
-                    cy="110"
-                    r={ringRadius}
-                    fill="none"
-                    stroke="#F97316"
-                    strokeWidth="14"
-                    strokeLinecap="round"
-                    strokeDasharray={ringCircumference}
-                    strokeDashoffset={ringOffset}
+                    cx="110" cy="110" r={ringRadius} fill="none" stroke="#F97316" strokeWidth="14"
+                    strokeLinecap="round" strokeDasharray={ringCircumference} strokeDashoffset={ringOffset}
                     className="transition-all duration-1000 ease-out"
-                    style={{
-                      filter: 'drop-shadow(0 0 8px rgba(249, 115, 22, 0.5))',
-                    }}
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(249, 115, 22, 0.5))' }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -653,7 +608,6 @@ function App() {
                 </div>
               </div>
             </div>
-            
             <div className="flex justify-center gap-3 mt-4">
               <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
                 <span className="text-red-400 font-semibold">{consumed.protein}g</span>
@@ -669,7 +623,7 @@ function App() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4">Recent Meals</h3>
             {!hasAnyMeals ? (
@@ -704,27 +658,23 @@ function App() {
               + Add meal
             </button>
           </div>
-          
+
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4">AI Insights</h3>
             <div className="space-y-3">
               {aiInsights.map((insight, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={`p-4 rounded-xl ${
-                    insight.type === 'success' 
-                      ? 'bg-green-500/10 border border-green-500/30' 
+                    insight.type === 'success'
+                      ? 'bg-green-500/10 border border-green-500/30'
                       : insight.type === 'warning'
                         ? 'bg-amber-500/10 border border-amber-500/30'
                         : 'bg-gray-800/30 border border-gray-700'
                   }`}
                 >
                   <p className={`text-sm ${
-                    insight.type === 'success' 
-                      ? 'text-green-400' 
-                      : insight.type === 'warning'
-                        ? 'text-amber-400'
-                        : 'text-gray-400'
+                    insight.type === 'success' ? 'text-green-400' : insight.type === 'warning' ? 'text-amber-400' : 'text-gray-400'
                   }`}>
                     {insight.text}
                   </p>
@@ -735,7 +685,7 @@ function App() {
               Ask AI for advice
             </button>
           </div>
-          
+
           <div className="mb-4">
             <h3 className="text-white font-semibold mb-4">Quick Add</h3>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -754,21 +704,29 @@ function App() {
               })}
             </div>
           </div>
+
+          <button
+            onClick={() => setScreen('camera')}
+            className="fixed bottom-24 right-4 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-lg z-40 hover:bg-orange-600 transition-colors"
+          >
+            <Camera className="w-7 h-7 text-white" />
+          </button>
+
         </div>
       </Layout>
     )
   }
 
   if (screen === 'analysis') {
-    const totalConsumed = meals.reduce((sum, meal) => 
+    const totalConsumed = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
-    const totalProtein = meals.reduce((sum, meal) => 
+    const totalProtein = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
-    const totalCarbs = meals.reduce((sum, meal) => 
+    const totalCarbs = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
-    const totalFat = meals.reduce((sum, meal) => 
+    const totalFat = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
-    
+
     const macroData = totalConsumed > 0 ? [
       { name: 'Protein', value: totalProtein, color: '#ef4444' },
       { name: 'Carbs', value: totalCarbs, color: '#f59e0b' },
@@ -778,37 +736,28 @@ function App() {
       { name: 'Carbs', value: 0, color: '#374151' },
       { name: 'Fat', value: 0, color: '#374151' }
     ]
-    
-    const dailyAverage = logbookEntries.length > 0 
-      ? Math.round(logbookEntries.reduce((s, e) => s + e.calories, 0) / 7) 
+
+    const dailyAverage = logbookEntries.length > 0
+      ? Math.round(logbookEntries.reduce((s, e) => s + e.calories, 0) / 7)
       : 0
-    
+
     const formatDateHeader = (date) => {
       const now = new Date()
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
       const yesterday = new Date(today.getTime() - 86400000)
       const entryDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-      
       if (entryDate.getTime() === today.getTime()) return 'Today'
       if (entryDate.getTime() === yesterday.getTime()) return 'Yesterday'
-      
       return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
     }
-    
-    const formatTime = (date) => {
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-    }
-    
+
+    const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+
     const getMealIcon = (mealType) => {
-      const mapping = {
-        'breakfast': MealIconBreakfast,
-        'lunch': MealIconLunch,
-        'dinner': MealIconDinner,
-        'snack': MealIconSnack,
-      }
+      const mapping = { 'breakfast': MealIconBreakfast, 'lunch': MealIconLunch, 'dinner': MealIconDinner, 'snack': MealIconSnack }
       return mapping[mealType] || MealIconSnack
     }
-    
+
     const filteredEntries = logbookEntries.filter(entry => {
       if (logbookFilter !== 'All' && logbookFilter !== 'Barcode') {
         if (entry.meal.toLowerCase() !== logbookFilter.toLowerCase()) return false
@@ -817,63 +766,46 @@ function App() {
       if (logbookSearch && !entry.name.toLowerCase().includes(logbookSearch.toLowerCase())) return false
       return true
     })
-    
+
     const groupedEntries = filteredEntries.reduce((groups, entry) => {
       const header = formatDateHeader(entry.timestamp)
       if (!groups[header]) groups[header] = []
       groups[header].push(entry)
       return groups
     }, {})
-    
-    const toggleExpand = (id) => {
-      setExpandedEntry(expandedEntry === id ? null : id)
-    }
-    
+
+    const toggleExpand = (id) => setExpandedEntry(expandedEntry === id ? null : id)
     const filterOptions = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Barcode']
-    
-    const getMealLabel = (meal) => {
-      return meal.charAt(0).toUpperCase() + meal.slice(1)
-    }
-    
+    const getMealLabel = (meal) => meal.charAt(0).toUpperCase() + meal.slice(1)
+
     const weekEntries = logbookEntries.filter(e => {
       const weekAgo = new Date(Date.now() - 7 * 86400000)
       return e.timestamp >= weekAgo
     })
     const avgCalories = dailyAverage
-    const mostLogged = weekEntries.length > 0 
+    const mostLogged = weekEntries.length > 0
       ? Object.entries(weekEntries.reduce((counts, e) => {
           counts[e.name] = (counts[e.name] || 0) + 1
           return counts
         }, {})).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
       : 'None'
-    
+
     return (
       <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
+        <div className="flex-1 flex flex-col p-4 pt-16 pb-28 overflow-y-auto">
           <h1 className="text-2xl font-bold text-white mb-4">Analysis</h1>
-          
+
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4">Macronutrients</h3>
             <div className="h-48 min-h-[192px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={macroData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={70}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
+                  <Pie data={macroData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
                     {macroData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px' }}
-                    itemStyle={{ color: '#fff' }}
-                  />
+                  <Tooltip contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -886,15 +818,12 @@ function App() {
               ))}
             </div>
           </div>
-          
+
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white font-semibold">Food Logbook</h3>
-              <button className="p-2">
-                <FilterIcon />
-              </button>
+              <button className="p-2"><FilterIcon /></button>
             </div>
-            
             <div className="grid grid-cols-3 gap-2 mb-4">
               <div className="bg-[#0D1117] rounded-lg p-3 text-center">
                 <p className="text-white font-semibold text-lg">{weekEntries.length}</p>
@@ -909,7 +838,6 @@ function App() {
                 <p className="text-gray-500 text-xs">most logged</p>
               </div>
             </div>
-            
             <input
               type="text"
               placeholder="Search foods..."
@@ -917,23 +845,19 @@ function App() {
               onChange={(e) => setLogbookSearch(e.target.value)}
               className="w-full bg-[#0D1117] border border-[#1E2530] rounded-lg px-3 py-2 text-white text-sm mb-3 placeholder-gray-500"
             />
-            
             <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
               {filterOptions.map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setLogbookFilter(filter)}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    logbookFilter === filter
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-[#1E2530] text-gray-400'
+                    logbookFilter === filter ? 'bg-orange-500 text-white' : 'bg-[#1E2530] text-gray-400'
                   }`}
                 >
                   {filter}
                 </button>
               ))}
             </div>
-            
             {filteredEntries.length === 0 ? (
               <div className="flex flex-col items-center py-8">
                 <ClipboardIcon />
@@ -952,14 +876,8 @@ function App() {
                       const MealIcon = getMealIcon(entry.meal)
                       const isExpanded = expandedEntry === entry.id
                       return (
-                        <div 
-                          key={entry.id}
-                          className="bg-[#161B22] rounded-xl p-3 border border-[#1E2530] overflow-hidden transition-all duration-300"
-                        >
-                          <div 
-                            className="flex items-center justify-between cursor-pointer"
-                            onClick={() => toggleExpand(entry.id)}
-                          >
+                        <div key={entry.id} className="bg-[#161B22] rounded-xl p-3 border border-[#1E2530] overflow-hidden transition-all duration-300">
+                          <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleExpand(entry.id)}>
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 bg-[#EFF3FB] rounded-lg flex items-center justify-center">
                                 <MealIcon />
@@ -971,53 +889,27 @@ function App() {
                             </div>
                             <div className="text-right">
                               <p className="text-orange-500 text-sm font-semibold">{entry.calories} kcal</p>
-                              {entry.scannedViaBarcode && (
-                                <div className="flex justify-end mt-1">
-                                  <BarcodeIcon />
-                                </div>
-                              )}
+                              {entry.scannedViaBarcode && <div className="flex justify-end mt-1"><BarcodeIcon /></div>}
                             </div>
                           </div>
-                          
                           {isExpanded && (
                             <div className="mt-3 pt-3 border-t border-[#1E2530]">
                               <div className="flex items-center gap-3">
-                                <div className="flex-1">
-                                  <div className="flex justify-between text-xs mb-1">
-                                    <span className="text-red-400">Protein</span>
-                                    <span className="text-gray-400">{entry.protein}g</span>
+                                {[
+                                  { label: 'Protein', value: entry.protein, color: 'red', max: 60 },
+                                  { label: 'Carbs', value: entry.carbs, color: 'amber', max: 100 },
+                                  { label: 'Fat', value: entry.fat, color: 'yellow', max: 50 },
+                                ].map(({ label, value, color, max }) => (
+                                  <div key={label} className="flex-1">
+                                    <div className="flex justify-between text-xs mb-1">
+                                      <span className={`text-${color}-400`}>{label}</span>
+                                      <span className="text-gray-400">{value}g</span>
+                                    </div>
+                                    <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
+                                      <div className={`h-full bg-${color}-500 rounded-full`} style={{ width: `${Math.min((value / max) * 100, 100)}%` }} />
+                                    </div>
                                   </div>
-                                  <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full bg-red-500 rounded-full"
-                                      style={{ width: `${Math.min((entry.protein / 60) * 100, 100)}%` }}
-                                    />
-                                  </div>
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex justify-between text-xs mb-1">
-                                    <span className="text-amber-400">Carbs</span>
-                                    <span className="text-gray-400">{entry.carbs}g</span>
-                                  </div>
-                                  <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full bg-amber-500 rounded-full"
-                                      style={{ width: `${Math.min((entry.carbs / 100) * 100, 100)}%` }}
-                                    />
-                                  </div>
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex justify-between text-xs mb-1">
-                                    <span className="text-yellow-400">Fat</span>
-                                    <span className="text-gray-400">{entry.fat}g</span>
-                                  </div>
-                                  <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full bg-yellow-500 rounded-full"
-                                      style={{ width: `${Math.min((entry.fat / 50) * 100, 100)}%` }}
-                                    />
-                                  </div>
-                                </div>
+                                ))}
                               </div>
                             </div>
                           )}
@@ -1075,102 +967,117 @@ function App() {
     </div>
   )
 
-  if (screen === 'results') {
-    return (
-      <div className="min-h-screen w-full relative">
-        <img src={capturedImage} alt="Results background" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/40" />
-
-        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerContent>
-            <DrawerHeader className="text-left">
-              <DrawerTitle>Nutrition Facts</DrawerTitle>
-              <DrawerDescription>{mockNutritionData.serving}</DrawerDescription>
-            </DrawerHeader>
-            <div className="px-4 pb-4">
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
-                      <Flame className="w-4 h-4" />
-                      <span className="text-xs font-medium">Calories</span>
-                    </div>
-                    <p className="text-2xl font-bold text-orange-700">{mockNutritionData.calories}</p>
-                    <p className="text-xs text-orange-500">kcal</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
-                      <Beef className="w-4 h-4" />
-                      <span className="text-xs font-medium">Protein</span>
-                    </div>
-                    <p className="text-2xl font-bold text-red-700">{mockNutritionData.protein}</p>
-                    <p className="text-xs text-red-500">g</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
-                      <Wheat className="w-4 h-4" />
-                      <span className="text-xs font-medium">Carbs</span>
-                    </div>
-                    <p className="text-2xl font-bold text-amber-700">{mockNutritionData.carbs}</p>
-                    <p className="text-xs text-amber-500">g</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
-                      <Droplets className="w-4 h-4" />
-                      <span className="text-xs font-medium">Fat</span>
-                    </div>
-                    <p className="text-2xl font-bold text-yellow-700">{mockNutritionData.fat}</p>
-                    <p className="text-xs text-yellow-500">g</p>
-                  </CardContent>
-                </Card>
-              </div>
+  if (screen === 'results') return (
+    <div className="min-h-screen w-full relative">
+      <img src={capturedImage} alt="Results background" className="absolute inset-0 w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-black/40" />
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Nutrition Facts</DrawerTitle>
+            <DrawerDescription>
+              {nutritionResult?.name} — {nutritionResult?.confidence}% confidence
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
+                    <Flame className="w-4 h-4" />
+                    <span className="text-xs font-medium">Calories</span>
+                  </div>
+                  <p className="text-2xl font-bold text-orange-700">{nutritionResult?.nutrition?.calories}</p>
+                  <p className="text-xs text-orange-500">kcal</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
+                    <Beef className="w-4 h-4" />
+                    <span className="text-xs font-medium">Protein</span>
+                  </div>
+                  <p className="text-2xl font-bold text-red-700">{nutritionResult?.nutrition?.protein}</p>
+                  <p className="text-xs text-red-500">g</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
+                    <Wheat className="w-4 h-4" />
+                    <span className="text-xs font-medium">Carbs</span>
+                  </div>
+                  <p className="text-2xl font-bold text-amber-700">{nutritionResult?.nutrition?.carbs}</p>
+                  <p className="text-xs text-amber-500">g</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
+                    <Droplets className="w-4 h-4" />
+                    <span className="text-xs font-medium">Fat</span>
+                  </div>
+                  <p className="text-2xl font-bold text-yellow-700">{nutritionResult?.nutrition?.fat}</p>
+                  <p className="text-xs text-yellow-500">g</p>
+                </CardContent>
+              </Card>
             </div>
-            <DrawerFooter>
-              <Button onClick={resetApp} className="w-full bg-[#0F2C5C]">
-                Add to My Meals
-              </Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-      </div>
-    )
-  }
+          </div>
+          <DrawerFooter>
+            <Button
+              onClick={() => {
+                if (nutritionResult) {
+                  setMeals(prev => prev.map(meal =>
+                    meal.name === 'Snacks'
+                      ? {
+                          ...meal,
+                          items: [...meal.items, {
+                            name: nutritionResult.name,
+                            calories: parseFloat(nutritionResult.nutrition?.calories) || 0,
+                            protein: parseFloat(nutritionResult.nutrition?.protein) || 0,
+                            carbs: parseFloat(nutritionResult.nutrition?.carbs) || 0,
+                            fat: parseFloat(nutritionResult.nutrition?.fat) || 0,
+                          }]
+                        }
+                      : meal
+                  ))
+                }
+                resetApp()
+              }}
+              className="w-full bg-[#0F2C5C]"
+            >
+              Add to My Meals
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </div>
+  )
 
   if (screen === 'plan') {
-    const totalCalories = meals.reduce((sum, meal) => 
+    const totalCalories = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
-    const totalProtein = meals.reduce((sum, meal) => 
+    const totalProtein = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
-    const totalCarbs = meals.reduce((sum, meal) => 
+    const totalCarbs = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
-    const totalFat = meals.reduce((sum, meal) => 
+    const totalFat = meals.reduce((sum, meal) =>
       sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
-    
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    
+
     return (
       <Layout activeTab="plan" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
+        <div className="flex-1 flex flex-col p-4 pt-16 pb-28 overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => setShowPlanScanner(true)}
                 className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1"
               >
                 <Camera className="w-4 h-4" />
                 Scan Food
               </button>
-              <button 
+              <button
                 onClick={() => setShowGoalModal(true)}
                 className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium"
               >
@@ -1178,11 +1085,11 @@ function App() {
               </button>
             </div>
           </div>
-          
+
           {showPlanScanner && (
             <div className="fixed inset-0 z-[100] bg-black flex flex-col">
-              <Scanner 
-                user={user} 
+              <Scanner
+                user={user}
                 onLogout={handleLogout}
                 onNavigate={(screenId) => {
                   if (screenId) setScreen(screenId)
@@ -1191,15 +1098,15 @@ function App() {
               />
             </div>
           )}
-          
+
           <div className="bg-gray-900 rounded-xl p-4 mb-4">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-white font-semibold">Today's Progress</h3>
               <span className="text-xs text-gray-400">{totalCalories} / {dietGoals.calories} kcal</span>
             </div>
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
-              <div 
-                className="h-full bg-[#0F2C5C] rounded-full transition-all" 
+              <div
+                className="h-full bg-[#0F2C5C] rounded-full transition-all"
                 style={{ width: `${Math.min((totalCalories / dietGoals.calories) * 100, 100)}%` }}
               />
             </div>
@@ -1218,7 +1125,7 @@ function App() {
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             <h3 className="text-white font-semibold">Today's Meals</h3>
             {meals.map((meal) => (
@@ -1246,59 +1153,32 @@ function App() {
             ))}
           </div>
         </div>
-        
+
         {showGoalModal && (
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div className="bg-gray-900 rounded-xl p-6 w-full max-w-sm">
               <h3 className="text-white font-semibold text-lg mb-4">Set Daily Goals</h3>
               <div className="space-y-4">
-                <div>
-                  <label className="text-gray-400 text-sm">Calories (kcal)</label>
-                  <input 
-                    type="number" 
-                    value={newGoal.calories}
-                    onChange={(e) => setNewGoal({...newGoal, calories: Number(e.target.value)})}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-sm">Protein (g)</label>
-                  <input 
-                    type="number" 
-                    value={newGoal.protein}
-                    onChange={(e) => setNewGoal({...newGoal, protein: Number(e.target.value)})}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-sm">Carbs (g)</label>
-                  <input 
-                    type="number" 
-                    value={newGoal.carbs}
-                    onChange={(e) => setNewGoal({...newGoal, carbs: Number(e.target.value)})}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-sm">Fat (g)</label>
-                  <input 
-                    type="number" 
-                    value={newGoal.fat}
-                    onChange={(e) => setNewGoal({...newGoal, fat: Number(e.target.value)})}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                  />
-                </div>
+                {[
+                  { label: 'Calories (kcal)', key: 'calories' },
+                  { label: 'Protein (g)', key: 'protein' },
+                  { label: 'Carbs (g)', key: 'carbs' },
+                  { label: 'Fat (g)', key: 'fat' },
+                ].map(({ label, key }) => (
+                  <div key={key}>
+                    <label className="text-gray-400 text-sm">{label}</label>
+                    <input
+                      type="number"
+                      value={newGoal[key]}
+                      onChange={(e) => setNewGoal({ ...newGoal, [key]: Number(e.target.value) })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
+                    />
+                  </div>
+                ))}
               </div>
               <div className="flex gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowGoalModal(false)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button onClick={() => {
-                  setDietGoals(newGoal)
-                  setShowGoalModal(false)
-                }} className="flex-1 bg-[#0F2C5C]">
-                  Save
-                </Button>
+                <Button variant="outline" onClick={() => setShowGoalModal(false)} className="flex-1">Cancel</Button>
+                <Button onClick={() => { setDietGoals(newGoal); setShowGoalModal(false) }} className="flex-1 bg-[#0F2C5C]">Save</Button>
               </div>
             </div>
           </div>
@@ -1307,48 +1187,35 @@ function App() {
     )
   }
 
-  if (screen === 'settings') {
-    return (
-      <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
-        <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
-          <h1 className="text-2xl font-bold text-white mb-4">Settings</h1>
-          
-          {user && (
-            <div className="bg-gray-900 rounded-xl p-4 mb-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-[#0F2C5C] rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white font-medium">{user.name}</p>
-                  <p className="text-gray-500 text-sm">{user.email}</p>
-                </div>
+  if (screen === 'settings') return (
+    <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
+      <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
+        <h1 className="text-2xl font-bold text-white mb-4">Settings</h1>
+        {user && (
+          <div className="bg-gray-900 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-[#0F2C5C] rounded-full flex items-center justify-center">
+                <User className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-white font-medium">{user.name}</p>
+                <p className="text-gray-500 text-sm">{user.email}</p>
               </div>
             </div>
-          )}
-          
-          <div className="space-y-2">
-            <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">
-              Account Settings
-            </button>
-            <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">
-              Notifications
-            </button>
-            <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">
-              Privacy
-            </button>
-            <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">
-              Help
-            </button>
-            <button onClick={handleLogout} className="w-full bg-gray-900 rounded-xl p-4 text-left text-red-500 font-medium flex items-center justify-between">
-              <LogOut className="w-5 h-5" />
-              Sign Out
-            </button>
           </div>
+        )}
+        <div className="space-y-2">
+          <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">Account Settings</button>
+          <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">Notifications</button>
+          <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">Privacy</button>
+          <button className="w-full bg-gray-900 rounded-xl p-4 text-left text-white font-medium flex items-center justify-between">Help</button>
+          <button onClick={handleLogout} className="w-full bg-gray-900 rounded-xl p-4 text-left text-red-500 font-medium flex items-center gap-2">
+            <LogOut className="w-5 h-5" />Sign Out
+          </button>
         </div>
-      </Layout>
-    )
-  }
+      </div>
+    </Layout>
+  )
 
   return (
     <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
