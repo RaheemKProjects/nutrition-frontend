@@ -1,12 +1,10 @@
+import Calendar from 'react-calendar'
 import { useState, useRef, useEffect } from 'react'
-import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Apple, Home, Calendar, BarChart3, Settings, ScanLine, ScanBarcode, FileText, Library, User, Lock, Mail, ArrowRight, LogOut } from 'lucide-react'
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
+import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Home, Calendar as CalendarIcon, BarChart3, Settings, User, Lock, Mail, ArrowRight, LogOut } from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { Button } from './components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
+import { Card, CardContent } from './components/ui/card'
 import Scanner from './Scanner'
-import AddMealModal from './components/AddMealModal'
-import FoodDetailSheet from './components/FoodDetailSheet'
-import Toast from './components/Toast'
 import {
   Drawer,
   DrawerContent,
@@ -14,7 +12,6 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerFooter,
-  DrawerClose,
 } from './components/ui/drawer'
 import './index.css'
 
@@ -120,10 +117,143 @@ const ClipboardIcon = () => (
   </svg>
 )
 
+const NutritionCalendar = ({ onClose, logbookEntries }) => {
+  const [selectedDate, setSelectedDate] = useState(new Date())
+
+  const scansForDate = logbookEntries.filter(scan => {
+    const scanDate = new Date(scan.timestamp).toDateString()
+    return scanDate === selectedDate.toDateString()
+  })
+
+  const weeklyData = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (6 - i))
+    const dayScans = logbookEntries.filter(scan => {
+      return new Date(scan.timestamp).toDateString() === date.toDateString()
+    })
+    const totalCals = dayScans.reduce((sum, scan) => sum + (parseFloat(scan.calories) || 0), 0)
+    return {
+      day: date.toLocaleDateString('en-GB', { weekday: 'short' }),
+      date: date.toDateString(),
+      calories: totalCals,
+      scans: dayScans.length,
+    }
+  })
+
+  const maxCals = Math.max(...weeklyData.map(d => d.calories), 1)
+  const datesWithScans = logbookEntries.map(scan => new Date(scan.timestamp).toDateString())
+  const getDailyTotal = (scans) => scans.reduce((sum, scan) => sum + (parseFloat(scan.calories) || 0), 0).toFixed(0)
+
+  return (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center">
+      <div className="bg-[#161B22] w-full max-w-lg rounded-t-2xl flex flex-col h-[90vh]">
+        <div className="flex items-center justify-between p-4 border-b border-[#1E2530]">
+          <h2 className="text-white font-semibold text-lg">Nutrition Calendar</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">✕</button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="bg-[#0D1117] rounded-xl p-4 mb-4 border border-[#1E2530]">
+            <h3 className="text-white font-semibold mb-4 text-sm">This Week</h3>
+            <div className="flex items-end gap-2 h-24">
+              {weeklyData.map((day, index) => (
+                <div key={index} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full flex items-end justify-center" style={{ height: '80px' }}>
+                    <div
+                      className={`w-full rounded-t-md transition-all ${
+                        day.date === new Date().toDateString()
+                          ? 'bg-orange-500'
+                          : day.calories > 0
+                            ? 'bg-[#0F2C5C]'
+                            : 'bg-[#1E2530]'
+                      }`}
+                      style={{ height: `${Math.max((day.calories / maxCals) * 80, day.calories > 0 ? 8 : 4)}px` }}
+                    />
+                  </div>
+                  <span className="text-gray-500 text-xs">{day.day}</span>
+                  {day.calories > 0 && (
+                    <span className="text-orange-400 text-xs">{day.calories}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-[#0D1117] rounded-xl p-4 mb-4 border border-[#1E2530]">
+            <h3 className="text-white font-semibold mb-3 text-sm">Select a Date</h3>
+            <style>{`
+              .react-calendar { background: transparent; border: none; color: white; font-family: inherit; width: 100%; }
+              .react-calendar__tile { background: transparent; color: #9ca3af; border-radius: 8px; padding: 8px; }
+              .react-calendar__tile:hover { background: #1E2530; color: white; }
+              .react-calendar__tile--active { background: #F97316 !important; color: white !important; border-radius: 8px; }
+              .react-calendar__tile--now { background: #0F2C5C; color: white; border-radius: 8px; }
+              .react-calendar__navigation button { background: transparent; color: white; font-size: 14px; }
+              .react-calendar__navigation button:hover { background: #1E2530; border-radius: 8px; }
+              .react-calendar__month-view__weekdays { color: #6b7280; font-size: 11px; }
+              .has-scan { background: #0F2C5C !important; color: white !important; }
+            `}</style>
+            <Calendar
+              onChange={setSelectedDate}
+              value={selectedDate}
+              tileClassName={({ date }) =>
+                datesWithScans.includes(date.toDateString()) ? 'has-scan' : null
+              }
+            />
+          </div>
+
+          <div className="bg-[#0D1117] rounded-xl p-4 border border-[#1E2530]">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-semibold text-sm">
+                {selectedDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </h3>
+              {scansForDate.length > 0 && (
+                <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full">
+                  {getDailyTotal(scansForDate)} kcal
+                </span>
+              )}
+            </div>
+            {scansForDate.length === 0 ? (
+              <div className="flex flex-col items-center py-6">
+                <p className="text-gray-500 text-sm">No meals logged on this day</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {scansForDate.map((scan, index) => (
+                  <div key={index} className="bg-[#161B22] rounded-xl p-3 border border-[#1E2530]">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-white text-sm font-medium capitalize">{scan.name || scan.foodName}</p>
+                      <p className="text-orange-500 text-sm font-semibold">{scan.calories} kcal</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Protein</p>
+                        <p className="text-xs font-medium text-red-400">{scan.protein}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Carbs</p>
+                        <p className="text-xs font-medium text-amber-400">{scan.carbs}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Fat</p>
+                        <p className="text-xs font-medium text-yellow-400">{scan.fat}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [screen, setScreen] = useState('home')
   const [capturedImage, setCapturedImage] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(true)
+  const [showCalendar, setShowCalendar] = useState(false)
   const [cameraPermission, setCameraPermission] = useState('prompt')
   const [nutritionResult, setNutritionResult] = useState(null)
 
@@ -150,10 +280,6 @@ function App() {
   ])
 
   const [showGoalModal, setShowGoalModal] = useState(false)
-  const [showAddMeal, setShowAddMeal] = useState(false)
-  const [selectedFood, setSelectedFood] = useState(null)
-  const [toastMessage, setToastMessage] = useState('')
-  const [showToast, setShowToast] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showPlanScanner, setShowPlanScanner] = useState(false)
   const [newGoal, setNewGoal] = useState({ ...dietGoals })
@@ -169,43 +295,19 @@ function App() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('nutrisnap_user')
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
-    }
+    if (savedUser) setUser(JSON.parse(savedUser))
   }, [])
 
   const handleRegister = () => {
     setAuthLoading(true)
     setAuthError('')
     setTimeout(() => {
-      if (!authEmail || !authPassword || !authName) {
-        setAuthError('Please fill in all fields')
-        setAuthLoading(false)
-        return
-      }
-      if (!authEmail.includes('@')) {
-        setAuthError('Please enter a valid email')
-        setAuthLoading(false)
-        return
-      }
-      if (authPassword.length < 6) {
-        setAuthError('Password must be at least 6 characters')
-        setAuthLoading(false)
-        return
-      }
+      if (!authEmail || !authPassword || !authName) { setAuthError('Please fill in all fields'); setAuthLoading(false); return }
+      if (!authEmail.includes('@')) { setAuthError('Please enter a valid email'); setAuthLoading(false); return }
+      if (authPassword.length < 6) { setAuthError('Password must be at least 6 characters'); setAuthLoading(false); return }
       const users = JSON.parse(localStorage.getItem('nutrisnap_users') || '[]')
-      if (users.find(u => u.email === authEmail)) {
-        setAuthError('Email already registered')
-        setAuthLoading(false)
-        return
-      }
-      const newUser = {
-        id: Date.now(),
-        name: authName,
-        email: authEmail,
-        password: authPassword,
-        createdAt: new Date().toISOString()
-      }
+      if (users.find(u => u.email === authEmail)) { setAuthError('Email already registered'); setAuthLoading(false); return }
+      const newUser = { id: Date.now(), name: authName, email: authEmail, password: authPassword, createdAt: new Date().toISOString() }
       users.push(newUser)
       localStorage.setItem('nutrisnap_users', JSON.stringify(users))
       localStorage.setItem('nutrisnap_user', JSON.stringify(newUser))
@@ -219,18 +321,10 @@ function App() {
     setAuthLoading(true)
     setAuthError('')
     setTimeout(() => {
-      if (!authEmail || !authPassword) {
-        setAuthError('Please enter email and password')
-        setAuthLoading(false)
-        return
-      }
+      if (!authEmail || !authPassword) { setAuthError('Please enter email and password'); setAuthLoading(false); return }
       const users = JSON.parse(localStorage.getItem('nutrisnap_users') || '[]')
       const foundUser = users.find(u => u.email === authEmail && u.password === authPassword)
-      if (!foundUser) {
-        setAuthError('Invalid email or password')
-        setAuthLoading(false)
-        return
-      }
+      if (!foundUser) { setAuthError('Invalid email or password'); setAuthLoading(false); return }
       localStorage.setItem('nutrisnap_user', JSON.stringify(foundUser))
       setUser(foundUser)
       setAuthLoading(false)
@@ -252,71 +346,33 @@ function App() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">NutriSnap</h1>
-          <p className="text-gray-400">
-            {authMode === 'login' ? 'Welcome back!' : 'Create your account'}
-          </p>
+          <p className="text-gray-400">{authMode === 'login' ? 'Welcome back!' : 'Create your account'}</p>
         </div>
         <div className="bg-gray-900 rounded-xl p-6 space-y-4">
           {authMode === 'register' && (
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={authName}
-                onChange={(e) => setAuthName(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#0F2C5C]"
-              />
+              <input type="text" placeholder="Full Name" value={authName} onChange={(e) => setAuthName(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
             </div>
           )}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input
-              type="email"
-              placeholder="Email"
-              value={authEmail}
-              onChange={(e) => setAuthEmail(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#0F2C5C]"
-            />
+            <input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input
-              type="password"
-              placeholder="Password"
-              value={authPassword}
-              onChange={(e) => setAuthPassword(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#0F2C5C]"
-            />
+            <input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
           </div>
-          {authError && (
-            <p className="text-red-500 text-sm text-center">{authError}</p>
-          )}
-          <Button
-            onClick={authMode === 'login' ? handleLogin : handleRegister}
-            disabled={authLoading}
-            className="w-full bg-[#0F2C5C] hover:bg-[#0a2349] py-3"
-          >
-            {authLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                {authMode === 'login' ? 'Sign In' : 'Create Account'}
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </>
-            )}
+          {authError && <p className="text-red-500 text-sm text-center">{authError}</p>}
+          <Button onClick={authMode === 'login' ? handleLogin : handleRegister} disabled={authLoading} className="w-full bg-[#0F2C5C] hover:bg-[#0a2349] py-3">
+            {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{authMode === 'login' ? 'Sign In' : 'Create Account'}<ArrowRight className="w-5 h-5 ml-2" /></>}
           </Button>
           <div className="text-center pt-4">
-            <button
-              onClick={() => {
-                setAuthMode(authMode === 'login' ? 'register' : 'login')
-                setAuthError('')
-              }}
-              className="text-gray-400 text-sm hover:text-white"
-            >
-              {authMode === 'login'
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
+            <button onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError('') }} className="text-gray-400 text-sm hover:text-white">
+              {authMode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
           </div>
         </div>
@@ -332,26 +388,18 @@ function App() {
       if (!mediaDevices) return false
       if (typeof mediaDevices.getUserMedia !== 'function') return false
       return true
-    } catch (e) {
-      console.log('Camera check error:', e)
-      return false
-    }
+    } catch (e) { return false }
   }
 
   const checkCameraPermission = async () => {
     const isSupported = checkCameraSupport()
-    if (!isSupported) {
-      alert('Camera API is not supported on this device/browser.')
-      setCameraPermission('denied')
-      return
-    }
+    if (!isSupported) { alert('Camera API is not supported on this device/browser.'); setCameraPermission('denied'); return }
     try {
       const permissionStatus = await navigator.permissions.query({ name: 'camera' })
       setCameraPermission(permissionStatus.state)
       permissionStatus.onchange = () => setCameraPermission(permissionStatus.state)
       alert(`Current camera permission: ${permissionStatus.state}`)
     } catch (err) {
-      console.log('Permission API not supported, trying direct camera access')
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
         stream.getTracks().forEach(track => track.stop())
@@ -369,21 +417,13 @@ function App() {
     if (!isSupported) return
     const video = videoRef.current
     if (!video) return
-
     const stopCurrentStream = () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
-        streamRef.current = null
-      }
+      if (streamRef.current) { streamRef.current.getTracks().forEach(track => track.stop()); streamRef.current = null }
     }
-
     const tryCamera = async (facingMode) => {
       try {
         stopCurrentStream()
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false
-        })
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
         streamRef.current = stream
         video.srcObject = stream
         await new Promise((resolve) => {
@@ -391,21 +431,14 @@ function App() {
           setTimeout(resolve, 2000)
         })
         return true
-      } catch (err) {
-        console.log(`Camera failed with ${facingMode}:`, err.message)
-        return false
-      }
+      } catch (err) { console.log(`Camera failed with ${facingMode}:`, err.message); return false }
     }
-
     const success = await tryCamera({ ideal: 'environment' })
     if (!success) await tryCamera({ ideal: 'user' })
   }
 
   const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
+    if (streamRef.current) { streamRef.current.getTracks().forEach(track => track.stop()); streamRef.current = null }
   }
 
   const takePicture = () => {
@@ -430,101 +463,50 @@ function App() {
   }
 
   const confirmPicture = async () => {
-  setScreen('loading')
-  try {
-    // Get image element from canvas
-    const canvas = canvasRef.current
-    if (!canvas) throw new Error('No image captured')
-
-    // Use TensorFlow MobileNet instead of Clarifai
-    const { classifyFood } = await import('./services/tensorflowRecognition')
-    const foodPredictions = await classifyFood(canvas)
-    console.log('Food predictions:', foodPredictions)
-
-    if (!foodPredictions || foodPredictions.length === 0) {
-      alert('No food detected. Please take a photo of food.')
-      setScreen('home')
-      return
-    }
-
-    const topResult = foodPredictions[0]
-    setNutritionResult(topResult)
-
-    // Add to logbook
-    setLogbookEntries(prev => [{
-      id: Date.now(),
-      name: topResult.name,
-      calories: topResult.nutrition.calories,
-      protein: parseFloat(topResult.nutrition.protein) || 0,
-      carbs: parseFloat(topResult.nutrition.carbs) || 0,
-      fat: parseFloat(topResult.nutrition.fat) || 0,
-      meal: 'snack',
-      timestamp: new Date(),
-      scannedViaBarcode: false,
-    }, ...prev])
-
-    setScreen('results')
-    setDrawerOpen(true)
-
-    // Log to backend
-    await fetch(`${API_URL}/log-usage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        foodName: topResult.name,
+    setScreen('loading')
+    try {
+      const canvas = canvasRef.current
+      if (!canvas) throw new Error('No image captured')
+      const { classifyFood } = await import('./services/tensorflowRecognition')
+      const foodPredictions = await classifyFood(canvas)
+      console.log('Food predictions:', foodPredictions)
+      if (!foodPredictions || foodPredictions.length === 0) {
+        alert('No food detected. Please take a photo of food.')
+        setScreen('home')
+        return
+      }
+      const topResult = foodPredictions[0]
+      setNutritionResult(topResult)
+      setLogbookEntries(prev => [{
+        id: Date.now(),
+        name: topResult.name,
         calories: topResult.nutrition.calories,
-        timestamp: new Date().toISOString(),
-      }),
-    })
-
-  } catch (error) {
-    console.error('Error:', error)
-    alert('Something went wrong. Please try again.')
-    setScreen('preview')
+        protein: parseFloat(topResult.nutrition.protein) || 0,
+        carbs: parseFloat(topResult.nutrition.carbs) || 0,
+        fat: parseFloat(topResult.nutrition.fat) || 0,
+        meal: 'snack',
+        timestamp: new Date(),
+        scannedViaBarcode: false,
+      }, ...prev])
+      setScreen('results')
+      setDrawerOpen(true)
+      await fetch(`${API_URL}/log-usage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foodName: topResult.name, calories: topResult.nutrition.calories, timestamp: new Date().toISOString() }),
+      })
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Something went wrong. Please try again.')
+      setScreen('preview')
+    }
   }
-}
 
   const resetApp = () => {
     setScreen('home')
     setCapturedImage(null)
     setDrawerOpen(false)
     setNutritionResult(null)
-  }
-
-  const handleFoodSelect = (food) => {
-    setSelectedFood(food)
-  }
-
-  const handleFoodLog = (foodData) => {
-    const newEntry = {
-      id: Date.now().toString(),
-      name: foodData.name,
-      brand: foodData.brand || null,
-      meal: foodData.meal,
-      calories: foodData.calories,
-      protein: foodData.protein,
-      carbs: foodData.carbs,
-      fat: foodData.fat,
-      quantity: foodData.quantity,
-      unit: foodData.unit,
-      timestamp: foodData.timestamp || new Date(),
-      scannedViaBarcode: !!foodData.id && !foodData.name?.includes('AI'),
-      scannedViaCameraAI: false,
-      imageUri: null
-    }
-    
-    setLogbookEntries([newEntry, ...logbookEntries])
-    setToastMessage(`${foodData.name} added to ${foodData.meal}`)
-    setShowToast(true)
-  }
-
-  const showToastMessage = (message) => {
-    setToastMessage(message)
-    setShowToast(true)
-  }
-
-  const closeToast = () => {
-    setShowToast(false)
   }
 
   useEffect(() => { checkCameraPermission() }, [])
@@ -538,7 +520,7 @@ function App() {
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'plan', label: 'Plan', icon: Calendar },
+    { id: 'plan', label: 'Plan', icon: CalendarIcon },
     { id: 'analysis', label: 'Analysis', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
@@ -557,13 +539,9 @@ function App() {
           const Icon = item.icon
           const isActive = activeTab === item.id
           return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onTabClick(item.id)}
+            <button key={item.id} type="button" onClick={() => onTabClick(item.id)}
               className={`flex flex-col items-center justify-center py-2 px-4 ${isActive ? 'text-white' : 'text-gray-500'}`}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
-            >
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
               <Icon className="w-6 h-6" />
               <span className="text-xs mt-1">{item.label}</span>
             </button>
@@ -574,50 +552,21 @@ function App() {
   )
 
   if (screen === 'home') {
-    const totalConsumed = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
-    const totalProtein = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
-    const totalCarbs = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
-    const totalFat = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
-
+    const totalConsumed = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
+    const totalProtein = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
+    const totalCarbs = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
+    const totalFat = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
     const consumed = { calories: totalConsumed, protein: totalProtein, carbs: totalCarbs, fat: totalFat }
-    const remaining = {
-      calories: dietGoals.calories - consumed.calories,
-      protein: dietGoals.protein - consumed.protein,
-      carbs: dietGoals.carbs - consumed.carbs,
-      fat: dietGoals.fat - consumed.fat
-    }
-
+    const remaining = { calories: dietGoals.calories - consumed.calories }
     const quickAddMeals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks']
     const hasAnyMeals = meals.some(m => m.items && m.items.length > 0)
     const aiInsights = hasAnyMeals ? [
       { type: 'success', text: 'Your protein is on track.' },
       { type: 'warning', text: 'You have only had 1 serving of vegetables today.' },
-    ] : [
-      { type: 'info', text: 'Start logging meals to get personalized insights.' },
-    ]
-
-    const greeting = () => {
-      const hour = new Date().getHours()
-      if (hour < 12) return 'Good morning'
-      if (hour < 17) return 'Good afternoon'
-      return 'Good evening'
-    }
-
-    const formatTime = (index) => {
-      const times = ['7:00 AM', '12:30 PM', '6:30 PM', '3:00 PM']
-      return times[index] || ''
-    }
-
-    const getTotalCalories = (mealIndex) => {
-      const meal = meals[mealIndex]
-      if (!meal || !meal.items) return 0
-      return meal.items.reduce((sum, item) => sum + (item.calories || 0), 0)
-    }
-
+    ] : [{ type: 'info', text: 'Start logging meals to get personalized insights.' }]
+    const greeting = () => { const hour = new Date().getHours(); if (hour < 12) return 'Good morning'; if (hour < 17) return 'Good afternoon'; return 'Good evening' }
+    const formatTime = (index) => { const times = ['7:00 AM', '12:30 PM', '6:30 PM', '3:00 PM']; return times[index] || '' }
+    const getTotalCalories = (mealIndex) => { const meal = meals[mealIndex]; if (!meal || !meal.items) return 0; return meal.items.reduce((sum, item) => sum + (item.calories || 0), 0) }
     const calorieProgress = Math.min((consumed.calories / dietGoals.calories) * 100, 100)
     const ringRadius = 90
     const ringCircumference = 2 * Math.PI * ringRadius
@@ -628,9 +577,7 @@ function App() {
         <div className="flex-1 flex flex-col p-4 pt-16 pb-28 overflow-y-auto">
           <div className="mb-6 mt-2">
             <h1 className="text-3xl font-bold text-white">{greeting()}</h1>
-            <p className="text-gray-400 mt-1 text-base">
-              You are {remaining.calories > 0 ? remaining.calories : 0} kcal away from your goal
-            </p>
+            <p className="text-gray-400 mt-1 text-base">You are {remaining.calories > 0 ? remaining.calories : 0} kcal away from your goal</p>
           </div>
 
           <div className="bg-[#161B22] rounded-2xl p-6 mb-4 border border-[#1E2530]">
@@ -638,12 +585,10 @@ function App() {
               <div className="relative w-52 h-52">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 220 220">
                   <circle cx="110" cy="110" r={ringRadius} fill="none" stroke="#1E2530" strokeWidth="14" />
-                  <circle
-                    cx="110" cy="110" r={ringRadius} fill="none" stroke="#F97316" strokeWidth="14"
+                  <circle cx="110" cy="110" r={ringRadius} fill="none" stroke="#F97316" strokeWidth="14"
                     strokeLinecap="round" strokeDasharray={ringCircumference} strokeDashoffset={ringOffset}
                     className="transition-all duration-1000 ease-out"
-                    style={{ filter: 'drop-shadow(0 0 8px rgba(249, 115, 22, 0.5))' }}
-                  />
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(249, 115, 22, 0.5))' }} />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-5xl font-bold text-white">{consumed.calories}</span>
@@ -683,9 +628,7 @@ function App() {
                   return (
                     <div key={meal.id} className="flex items-center justify-between py-2">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-[#EFF3FB] rounded-lg flex items-center justify-center">
-                          <IconComponent />
-                        </div>
+                        <div className="w-8 h-8 bg-[#EFF3FB] rounded-lg flex items-center justify-center"><IconComponent /></div>
                         <div>
                           <p className="text-white text-sm font-medium">{meal.name}</p>
                           <p className="text-gray-500 text-xs">{formatTime(index)}</p>
@@ -697,10 +640,7 @@ function App() {
                 })}
               </div>
             )}
-            <button 
-              onClick={() => setShowAddMeal(true)}
-              className="w-full mt-4 py-2 text-orange-500 text-sm font-medium border border-dashed border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors"
-            >
+            <button className="w-full mt-4 py-2 text-orange-500 text-sm font-medium border border-dashed border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors">
               + Add meal
             </button>
           </div>
@@ -709,25 +649,30 @@ function App() {
             <h3 className="text-white font-semibold mb-4">AI Insights</h3>
             <div className="space-y-3">
               {aiInsights.map((insight, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-xl ${
-                    insight.type === 'success'
-                      ? 'bg-green-500/10 border border-green-500/30'
-                      : insight.type === 'warning'
-                        ? 'bg-amber-500/10 border border-amber-500/30'
-                        : 'bg-gray-800/30 border border-gray-700'
-                  }`}
-                >
-                  <p className={`text-sm ${
-                    insight.type === 'success' ? 'text-green-400' : insight.type === 'warning' ? 'text-amber-400' : 'text-gray-400'
-                  }`}>
+                <div key={index} className={`p-4 rounded-xl ${
+                  insight.type === 'success' ? 'bg-green-500/10 border border-green-500/30'
+                  : insight.type === 'warning' ? 'bg-amber-500/10 border border-amber-500/30'
+                  : 'bg-gray-800/30 border border-gray-700'}`}>
+                  <p className={`text-sm ${insight.type === 'success' ? 'text-green-400' : insight.type === 'warning' ? 'text-amber-400' : 'text-gray-400'}`}>
                     {insight.text}
                   </p>
                 </div>
               ))}
             </div>
-            <button className="w-full mt-4 py-3 text-orange-500 text-sm font-medium flex items-center justify-center gap-2 hover:bg-orange-500/10 rounded-lg transition-colors">
+            <button
+              onClick={() => {
+                const totalCals = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
+                const totalProtein = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
+                let advice = []
+                if (totalCals === 0) advice.push('Start scanning food to get personalised advice!')
+                else if (totalCals < dietGoals.calories * 0.5) advice.push('You have eaten less than half your calorie goal. Make sure to eat enough!')
+                else if (totalCals > dietGoals.calories) advice.push('You have exceeded your calorie goal today. Consider lighter meals.')
+                else advice.push('You are on track with your calorie goal. Keep it up!')
+                if (totalProtein < dietGoals.protein * 0.5) advice.push('Your protein intake is low. Try adding chicken, eggs or fish.')
+                alert(advice.join('\n\n'))
+              }}
+              className="w-full mt-4 py-3 text-orange-500 text-sm font-medium flex items-center justify-center gap-2 hover:bg-orange-500/10 rounded-lg transition-colors"
+            >
               Ask AI for advice
             </button>
           </div>
@@ -739,10 +684,7 @@ function App() {
                 const iconData = mealTypeIcons[mealType]
                 const QuickIcon = iconData ? iconData.quickAddIcon : QuickAddIconSnack
                 return (
-                  <button
-                    key={mealType}
-                    className="flex-shrink-0 bg-[#161B22] px-4 py-3 rounded-xl border border-[#1E2530] hover:border-orange-500/50 transition-colors flex flex-col items-center min-w-[80px]"
-                  >
+                  <button key={mealType} className="flex-shrink-0 bg-[#161B22] px-4 py-3 rounded-xl border border-[#1E2530] hover:border-orange-500/50 transition-colors flex flex-col items-center min-w-[80px]">
                     <QuickIcon />
                     <span className="text-gray-400 text-xs mt-2">{mealType}</span>
                   </button>
@@ -751,28 +693,19 @@ function App() {
             </div>
           </div>
 
-          <button
-            onClick={() => setScreen('camera')}
-            className="fixed bottom-24 right-4 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-lg z-40 hover:bg-orange-600 transition-colors"
-          >
+          <button onClick={() => setScreen('camera')} className="fixed bottom-24 right-4 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-lg z-40 hover:bg-orange-600 transition-colors">
             <Camera className="w-7 h-7 text-white" />
           </button>
-
         </div>
       </Layout>
     )
   }
 
   if (screen === 'analysis') {
-    const totalConsumed = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
-    const totalProtein = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
-    const totalCarbs = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
-    const totalFat = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
-
+    const totalConsumed = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
+    const totalProtein = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
+    const totalCarbs = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
+    const totalFat = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
     const macroData = totalConsumed > 0 ? [
       { name: 'Protein', value: totalProtein, color: '#ef4444' },
       { name: 'Carbs', value: totalCarbs, color: '#f59e0b' },
@@ -782,11 +715,7 @@ function App() {
       { name: 'Carbs', value: 0, color: '#374151' },
       { name: 'Fat', value: 0, color: '#374151' }
     ]
-
-    const dailyAverage = logbookEntries.length > 0
-      ? Math.round(logbookEntries.reduce((s, e) => s + e.calories, 0) / 7)
-      : 0
-
+    const dailyAverage = logbookEntries.length > 0 ? Math.round(logbookEntries.reduce((s, e) => s + e.calories, 0) / 7) : 0
     const formatDateHeader = (date) => {
       const now = new Date()
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -796,60 +725,43 @@ function App() {
       if (entryDate.getTime() === yesterday.getTime()) return 'Yesterday'
       return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
     }
-
     const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-
     const getMealIcon = (mealType) => {
       const mapping = { 'breakfast': MealIconBreakfast, 'lunch': MealIconLunch, 'dinner': MealIconDinner, 'snack': MealIconSnack }
       return mapping[mealType] || MealIconSnack
     }
-
     const filteredEntries = logbookEntries.filter(entry => {
-      if (logbookFilter !== 'All' && logbookFilter !== 'Barcode') {
-        if (entry.meal.toLowerCase() !== logbookFilter.toLowerCase()) return false
-      }
+      if (logbookFilter !== 'All' && logbookFilter !== 'Barcode') { if (entry.meal.toLowerCase() !== logbookFilter.toLowerCase()) return false }
       if (logbookFilter === 'Barcode' && !entry.scannedViaBarcode) return false
       if (logbookSearch && !entry.name.toLowerCase().includes(logbookSearch.toLowerCase())) return false
       return true
     })
-
     const groupedEntries = filteredEntries.reduce((groups, entry) => {
       const header = formatDateHeader(entry.timestamp)
       if (!groups[header]) groups[header] = []
       groups[header].push(entry)
       return groups
     }, {})
-
     const toggleExpand = (id) => setExpandedEntry(expandedEntry === id ? null : id)
     const filterOptions = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Barcode']
     const getMealLabel = (meal) => meal.charAt(0).toUpperCase() + meal.slice(1)
-
-    const weekEntries = logbookEntries.filter(e => {
-      const weekAgo = new Date(Date.now() - 7 * 86400000)
-      return e.timestamp >= weekAgo
-    })
+    const weekEntries = logbookEntries.filter(e => { const weekAgo = new Date(Date.now() - 7 * 86400000); return e.timestamp >= weekAgo })
     const avgCalories = dailyAverage
     const mostLogged = weekEntries.length > 0
-      ? Object.entries(weekEntries.reduce((counts, e) => {
-          counts[e.name] = (counts[e.name] || 0) + 1
-          return counts
-        }, {})).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
+      ? Object.entries(weekEntries.reduce((counts, e) => { counts[e.name] = (counts[e.name] || 0) + 1; return counts }, {})).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
       : 'None'
 
     return (
       <Layout activeTab="analysis" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 pb-28 overflow-y-auto">
           <h1 className="text-2xl font-bold text-white mb-4">Analysis</h1>
-
           <div className="bg-[#161B22] rounded-2xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4">Macronutrients</h3>
             <div className="h-48 min-h-[192px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={macroData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
-                    {macroData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                    {macroData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                 </PieChart>
@@ -884,22 +796,12 @@ function App() {
                 <p className="text-gray-500 text-xs">most logged</p>
               </div>
             </div>
-            <input
-              type="text"
-              placeholder="Search foods..."
-              value={logbookSearch}
-              onChange={(e) => setLogbookSearch(e.target.value)}
-              className="w-full bg-[#0D1117] border border-[#1E2530] rounded-lg px-3 py-2 text-white text-sm mb-3 placeholder-gray-500"
-            />
+            <input type="text" placeholder="Search foods..." value={logbookSearch} onChange={(e) => setLogbookSearch(e.target.value)}
+              className="w-full bg-[#0D1117] border border-[#1E2530] rounded-lg px-3 py-2 text-white text-sm mb-3 placeholder-gray-500" />
             <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
               {filterOptions.map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setLogbookFilter(filter)}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    logbookFilter === filter ? 'bg-orange-500 text-white' : 'bg-[#1E2530] text-gray-400'
-                  }`}
-                >
+                <button key={filter} onClick={() => setLogbookFilter(filter)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${logbookFilter === filter ? 'bg-orange-500 text-white' : 'bg-[#1E2530] text-gray-400'}`}>
                   {filter}
                 </button>
               ))}
@@ -925,9 +827,7 @@ function App() {
                         <div key={entry.id} className="bg-[#161B22] rounded-xl p-3 border border-[#1E2530] overflow-hidden transition-all duration-300">
                           <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleExpand(entry.id)}>
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-[#EFF3FB] rounded-lg flex items-center justify-center">
-                                <MealIcon />
-                              </div>
+                              <div className="w-8 h-8 bg-[#EFF3FB] rounded-lg flex items-center justify-center"><MealIcon /></div>
                               <div>
                                 <p className="text-white text-sm font-medium">{entry.name}</p>
                                 <p className="text-gray-500 text-xs">{getMealLabel(entry.meal)} - {formatTime(entry.timestamp)}</p>
@@ -1021,48 +921,34 @@ function App() {
         <DrawerContent>
           <DrawerHeader className="text-left">
             <DrawerTitle>Nutrition Facts</DrawerTitle>
-            <DrawerDescription>
-              {nutritionResult?.name} — {nutritionResult?.confidence}% confidence
-            </DrawerDescription>
+            <DrawerDescription>{nutritionResult?.name} — {nutritionResult?.confidence}% confidence</DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-4">
             <div className="grid grid-cols-2 gap-3 mb-4">
               <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
-                    <Flame className="w-4 h-4" />
-                    <span className="text-xs font-medium">Calories</span>
-                  </div>
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Flame className="w-4 h-4" /><span className="text-xs font-medium">Calories</span></div>
                   <p className="text-2xl font-bold text-orange-700">{nutritionResult?.nutrition?.calories}</p>
                   <p className="text-xs text-orange-500">kcal</p>
                 </CardContent>
               </Card>
               <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
-                    <Beef className="w-4 h-4" />
-                    <span className="text-xs font-medium">Protein</span>
-                  </div>
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Beef className="w-4 h-4" /><span className="text-xs font-medium">Protein</span></div>
                   <p className="text-2xl font-bold text-red-700">{nutritionResult?.nutrition?.protein}</p>
                   <p className="text-xs text-red-500">g</p>
                 </CardContent>
               </Card>
               <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
-                    <Wheat className="w-4 h-4" />
-                    <span className="text-xs font-medium">Carbs</span>
-                  </div>
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Wheat className="w-4 h-4" /><span className="text-xs font-medium">Carbs</span></div>
                   <p className="text-2xl font-bold text-amber-700">{nutritionResult?.nutrition?.carbs}</p>
                   <p className="text-xs text-amber-500">g</p>
                 </CardContent>
               </Card>
               <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1">
-                    <Droplets className="w-4 h-4" />
-                    <span className="text-xs font-medium">Fat</span>
-                  </div>
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Beef className="w-4 h-4" /><span className="text-xs font-medium">Fat</span></div>
                   <p className="text-2xl font-bold text-yellow-700">{nutritionResult?.nutrition?.fat}</p>
                   <p className="text-xs text-yellow-500">g</p>
                 </CardContent>
@@ -1074,18 +960,16 @@ function App() {
               onClick={() => {
                 if (nutritionResult) {
                   setMeals(prev => prev.map(meal =>
-                    meal.name === 'Snacks'
-                      ? {
-                          ...meal,
-                          items: [...meal.items, {
-                            name: nutritionResult.name,
-                            calories: parseFloat(nutritionResult.nutrition?.calories) || 0,
-                            protein: parseFloat(nutritionResult.nutrition?.protein) || 0,
-                            carbs: parseFloat(nutritionResult.nutrition?.carbs) || 0,
-                            fat: parseFloat(nutritionResult.nutrition?.fat) || 0,
-                          }]
-                        }
-                      : meal
+                    meal.name === 'Snacks' ? {
+                      ...meal,
+                      items: [...meal.items, {
+                        name: nutritionResult.name,
+                        calories: parseFloat(nutritionResult.nutrition?.calories) || 0,
+                        protein: parseFloat(nutritionResult.nutrition?.protein) || 0,
+                        carbs: parseFloat(nutritionResult.nutrition?.carbs) || 0,
+                        fat: parseFloat(nutritionResult.nutrition?.fat) || 0,
+                      }]
+                    } : meal
                   ))
                 }
                 resetApp()
@@ -1101,14 +985,10 @@ function App() {
   )
 
   if (screen === 'plan') {
-    const totalCalories = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
-    const totalProtein = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
-    const totalCarbs = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
-    const totalFat = meals.reduce((sum, meal) =>
-      sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
+    const totalCalories = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.calories || 0), 0), 0)
+    const totalProtein = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.protein || 0), 0), 0)
+    const totalCarbs = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.carbs || 0), 0), 0)
+    const totalFat = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
 
     return (
       <Layout activeTab="plan" onTabClick={(id) => setScreen(id)}>
@@ -1116,17 +996,15 @@ function App() {
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-white">Meal Plan</h1>
             <div className="flex gap-2">
-              <button
-                onClick={() => setShowPlanScanner(true)}
-                className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1"
-              >
+              <button onClick={() => setShowCalendar(true)} className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1">
+                <CalendarIcon className="w-4 h-4" />
+                Calendar
+              </button>
+              <button onClick={() => setShowPlanScanner(true)} className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1">
                 <Camera className="w-4 h-4" />
                 Scan Food
               </button>
-              <button
-                onClick={() => setShowGoalModal(true)}
-                className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium"
-              >
+              <button onClick={() => setShowGoalModal(true)} className="bg-[#0F2C5C] text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Set Goals
               </button>
             </div>
@@ -1134,14 +1012,7 @@ function App() {
 
           {showPlanScanner && (
             <div className="fixed inset-0 z-[100] bg-black flex flex-col">
-              <Scanner
-                user={user}
-                onLogout={handleLogout}
-                onNavigate={(screenId) => {
-                  if (screenId) setScreen(screenId)
-                }}
-                onClose={() => setShowPlanScanner(false)}
-              />
+              <Scanner user={user} onLogout={handleLogout} onNavigate={(screenId) => { if (screenId) setScreen(screenId) }} onClose={() => setShowPlanScanner(false)} />
             </div>
           )}
 
@@ -1151,24 +1022,12 @@ function App() {
               <span className="text-xs text-gray-400">{totalCalories} / {dietGoals.calories} kcal</span>
             </div>
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-3">
-              <div
-                className="h-full bg-[#0F2C5C] rounded-full transition-all"
-                style={{ width: `${Math.min((totalCalories / dietGoals.calories) * 100, 100)}%` }}
-              />
+              <div className="h-full bg-[#0F2C5C] rounded-full transition-all" style={{ width: `${Math.min((totalCalories / dietGoals.calories) * 100, 100)}%` }} />
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div>
-                <span className="text-red-400">{totalProtein}g</span>
-                <p className="text-gray-500">Protein</p>
-              </div>
-              <div>
-                <span className="text-amber-400">{totalCarbs}g</span>
-                <p className="text-gray-500">Carbs</p>
-              </div>
-              <div>
-                <span className="text-yellow-400">{totalFat}g</span>
-                <p className="text-gray-500">Fat</p>
-              </div>
+              <div><span className="text-red-400">{totalProtein}g</span><p className="text-gray-500">Protein</p></div>
+              <div><span className="text-amber-400">{totalCarbs}g</span><p className="text-gray-500">Carbs</p></div>
+              <div><span className="text-yellow-400">{totalFat}g</span><p className="text-gray-500">Fat</p></div>
             </div>
           </div>
 
@@ -1178,9 +1037,7 @@ function App() {
               <div key={meal.id} className="bg-gray-900 rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="text-white font-medium">{meal.name}</h4>
-                  <span className="text-xs text-gray-400">
-                    {meal.items.reduce((s, i) => s + (i.calories || 0), 0)} kcal
-                  </span>
+                  <span className="text-xs text-gray-400">{meal.items.reduce((s, i) => s + (i.calories || 0), 0)} kcal</span>
                 </div>
                 {meal.items.length > 0 ? (
                   <div className="space-y-2">
@@ -1200,25 +1057,20 @@ function App() {
           </div>
         </div>
 
+        {showCalendar && (
+          <NutritionCalendar onClose={() => setShowCalendar(false)} logbookEntries={logbookEntries} />
+        )}
+
         {showGoalModal && (
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div className="bg-gray-900 rounded-xl p-6 w-full max-w-sm">
               <h3 className="text-white font-semibold text-lg mb-4">Set Daily Goals</h3>
               <div className="space-y-4">
-                {[
-                  { label: 'Calories (kcal)', key: 'calories' },
-                  { label: 'Protein (g)', key: 'protein' },
-                  { label: 'Carbs (g)', key: 'carbs' },
-                  { label: 'Fat (g)', key: 'fat' },
-                ].map(({ label, key }) => (
+                {[{ label: 'Calories (kcal)', key: 'calories' }, { label: 'Protein (g)', key: 'protein' }, { label: 'Carbs (g)', key: 'carbs' }, { label: 'Fat (g)', key: 'fat' }].map(({ label, key }) => (
                   <div key={key}>
                     <label className="text-gray-400 text-sm">{label}</label>
-                    <input
-                      type="number"
-                      value={newGoal[key]}
-                      onChange={(e) => setNewGoal({ ...newGoal, [key]: Number(e.target.value) })}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
-                    />
+                    <input type="number" value={newGoal[key]} onChange={(e) => setNewGoal({ ...newGoal, [key]: Number(e.target.value) })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1" />
                   </div>
                 ))}
               </div>
@@ -1235,7 +1087,7 @@ function App() {
 
   if (screen === 'settings') return (
     <Layout activeTab="settings" onTabClick={(id) => setScreen(id)}>
-      <div className="flex-1 flex flex-col p-4 pt-16 overflow-y-auto">
+      <div className="flex-1 flex flex-col p-4 pt-16 pb-28 overflow-y-auto">
         <h1 className="text-2xl font-bold text-white mb-4">Settings</h1>
         {user && (
           <div className="bg-gray-900 rounded-xl p-4 mb-4">
@@ -1268,23 +1120,6 @@ function App() {
       <div className="flex-1 flex items-center justify-center p-6">
         <p className="text-gray-400">Loading...</p>
       </div>
-
-      <AddMealModal
-        isOpen={showAddMeal}
-        onClose={() => setShowAddMeal(false)}
-        onFoodSelect={handleFoodSelect}
-        onLoading={() => {}}
-        onError={() => {}}
-      />
-
-      <FoodDetailSheet
-        food={selectedFood}
-        isOpen={!!selectedFood}
-        onClose={() => setSelectedFood(null)}
-        onLog={handleFoodLog}
-      />
-
-      <Toast message={toastMessage} isVisible={showToast} onClose={closeToast} />
     </Layout>
   )
 }
