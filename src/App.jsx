@@ -462,45 +462,63 @@ function App() {
     setTimeout(startCamera, 100)
   }
 
-  const confirmPicture = async () => {
-    setScreen('loading')
-    try {
-      const canvas = canvasRef.current
-      if (!canvas) throw new Error('No image captured')
-      const { classifyFood } = await import('./services/tensorflowRecognition')
-      const foodPredictions = await classifyFood(canvas)
-      console.log('Food predictions:', foodPredictions)
-      if (!foodPredictions || foodPredictions.length === 0) {
-        alert('No food detected. Please take a photo of food.')
-        setScreen('home')
-        return
-      }
-      const topResult = foodPredictions[0]
-      setNutritionResult(topResult)
-      setLogbookEntries(prev => [{
-        id: Date.now(),
-        name: topResult.name,
-        calories: topResult.nutrition.calories,
-        protein: parseFloat(topResult.nutrition.protein) || 0,
-        carbs: parseFloat(topResult.nutrition.carbs) || 0,
-        fat: parseFloat(topResult.nutrition.fat) || 0,
-        meal: 'snack',
-        timestamp: new Date(),
-        scannedViaBarcode: false,
-      }, ...prev])
-      setScreen('results')
-      setDrawerOpen(true)
-      await fetch(`${API_URL}/log-usage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foodName: topResult.name, calories: topResult.nutrition.calories, timestamp: new Date().toISOString() }),
-      })
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Something went wrong. Please try again.')
+ const confirmPicture = async () => {
+  setScreen('loading')
+  try {
+    // Create an image element from the captured base64 image
+    const img = new Image()
+    img.src = capturedImage
+
+    await new Promise((resolve, reject) => {
+      img.onload = resolve
+      img.onerror = reject
+    })
+
+    // Use TensorFlow CocoSSD with the image element
+    const { classifyFood } = await import('./services/tensorflowRecognition')
+    const foodPredictions = await classifyFood(img)
+    console.log('Food predictions:', foodPredictions)
+
+    if (!foodPredictions || foodPredictions.length === 0) {
+      alert('No food detected. Please take a photo of food.')
       setScreen('preview')
+      return
     }
+
+    const topResult = foodPredictions[0]
+    setNutritionResult(topResult)
+
+    setLogbookEntries(prev => [{
+      id: Date.now(),
+      name: topResult.name,
+      calories: topResult.nutrition.calories,
+      protein: parseFloat(topResult.nutrition.protein) || 0,
+      carbs: parseFloat(topResult.nutrition.carbs) || 0,
+      fat: parseFloat(topResult.nutrition.fat) || 0,
+      meal: 'snack',
+      timestamp: new Date(),
+      scannedViaBarcode: false,
+    }, ...prev])
+
+    setScreen('results')
+    setDrawerOpen(true)
+
+    await fetch(`${API_URL}/log-usage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        foodName: topResult.name,
+        calories: topResult.nutrition.calories,
+        timestamp: new Date().toISOString(),
+      }),
+    })
+
+  } catch (error) {
+    console.error('Error:', error)
+    alert('Something went wrong. Please try again.')
+    setScreen('preview')
   }
+}
 
   const resetApp = () => {
     setScreen('home')

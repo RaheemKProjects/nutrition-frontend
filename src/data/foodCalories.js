@@ -12,7 +12,7 @@ const calories = {
   'donut': { min: 250, max: 350, protein: '4g', carbs: '35g', fat: '14g' },
 }
 
-// ← EXACTLY like lecturer's function to read calories
+// like Cain suggestions for now
 export function getCalorieRange(foodName) {
   const food = foodName.toLowerCase()
   const cal = calories[food]

@@ -4,7 +4,7 @@ import { getCalorieRange } from '../data/foodCalories'
 
 let model = null
 
-// FOOD_CLASSES - CocoSSD food items we want to detect
+// FOOD_CLASSES - CocoSSD food items we want to detect, do it this for now 
 const FOOD_CLASSES = {
   'banana': true,
   'apple': true,
@@ -39,7 +39,7 @@ export async function classifyFood(imgElement) {
   predictions.forEach(prediction => {
     const className = prediction.class.toLowerCase()
 
-    // ← EXACTLY like lecturer: check if in FOOD_CLASSES
+    //  do it like Cain for now 
     if (FOOD_CLASSES[className]) {
       // valid food
       const cal = getCalorieRange(className)
