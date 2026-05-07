@@ -42,6 +42,7 @@ const FOOD_CLASSES = {
   'cookie': true,
   'fries': true,
   'burger': true,
+  'chips': true,
 }
 
 export async function loadModel() {
