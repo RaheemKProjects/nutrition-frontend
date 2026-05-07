@@ -4,18 +4,20 @@ import { getCalorieRange } from '../data/foodCalories'
 
 let model = null
 
-// FOOD_CLASSES - CocoSSD food items we want to detect, do it this for now 
+// the FOOD_CLASSES - CocoSSD food items we want to detect, do it this for now to see if it works
 const FOOD_CLASSES = {
+  // fruit 
   'banana': true,
   'apple': true,
+   'orange': true,
   'sandwich': true,
-  'orange': true,
-  'broccoli': true,
-  'carrot': true,
-  'hot dog': true,
-  'pizza': true,
-  'donut': true,
-  'cake': true,
+  'grape': true,
+  'strawberry': true,
+  'pear': true,
+  'melon': true,
+  'watermelon': true,
+  'kiwi': true,
+  'mango': true,
 }
 
 export async function loadModel() {

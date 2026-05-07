@@ -1,5 +1,5 @@
 const calories = {
-  'banana': { min: 90, max: 120, protein: '1.3g', carbs: '27g', fat: '0.4g' },
+  'banana': { min: 90, max: 120, protein: '1.1g', carbs: '23g', fat: '0.3g' },
   'pizza': { min: 250, max: 350, protein: '12g', carbs: '36g', fat: '10g' },
   'burger': { min: 300, max: 500, protein: '20g', carbs: '29g', fat: '17g' },
   'hot dog': { min: 150, max: 300, protein: '10g', carbs: '18g', fat: '14g' },

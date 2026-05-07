@@ -465,7 +465,7 @@ function App() {
  const confirmPicture = async () => {
   setScreen('loading')
   try {
-    // Create an image element from the captured base64 image
+    // created an image element from the captured base64 image, this should capture the food
     const img = new Image()
     img.src = capturedImage
 
@@ -474,7 +474,7 @@ function App() {
       img.onerror = reject
     })
 
-    // Use TensorFlow CocoSSD with the image element
+    // using the upgraded TensorFlow CocoSSD with the image element, this should capture food
     const { classifyFood } = await import('./services/tensorflowRecognition')
     const foodPredictions = await classifyFood(img)
     console.log('Food predictions:', foodPredictions)
@@ -599,6 +599,10 @@ function App() {
           </div>
 
           <div className="bg-[#161B22] rounded-2xl p-6 mb-4 border border-[#1E2530]">
+            <div className="flex justify-between items-center mb-4">
+    <h3 className="text-white font-semibold">Total Calorie Intake</h3>
+    <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+  </div>
             <div className="flex flex-col items-center">
               <div className="relative w-52 h-52">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 220 220">
