@@ -18,6 +18,30 @@ const FOOD_CLASSES = {
   'watermelon': true,
   'kiwi': true,
   'mango': true,
+  'pineapple': true,
+  'passion fruit': true,
+  'blueberry': true,
+  'blackberry': true,
+  'peach': true,
+
+  //vegetables
+  'broccoli': true,
+  'carrot': true,
+  'cucumber': true,
+  'tomato': true,
+  'lettuce': true, 
+  'spinach': true,
+  'onion': true,
+  'pepper': true,
+
+  // junk food
+  'pizza': true,
+  'hot dog': true,
+  'cake': true,
+  'donut': true,
+  'cookie': true,
+  'fries': true,
+  'burger': true,
 }
 
 export async function loadModel() {
