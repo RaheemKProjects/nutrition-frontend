@@ -243,7 +243,7 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
 }
 
 function App() {
-  const [screen, setScreen] = useState('home')
+  const [screen, setScreen] = useState('login')
   const [capturedImage, setCapturedImage] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(true)
   const [showCalendar, setShowCalendar] = useState(false)
@@ -514,6 +514,8 @@ function App() {
 
   if (screen === 'login') return <AuthScreen />
   if (screen === 'register') return <AuthScreen />
+  // changed to auth screen 
+  if (!user) return <AuthScreen />
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
