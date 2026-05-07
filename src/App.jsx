@@ -151,7 +151,6 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
           <h2 className="text-white font-semibold text-lg">Nutrition Calendar</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">✕</button>
         </div>
-
         <div className="flex-1 overflow-y-auto p-4">
           <div className="bg-[#0D1117] rounded-xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4 text-sm">This Week</h3>
@@ -163,17 +162,13 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
                       className={`w-full rounded-t-md transition-all ${
                         day.date === new Date().toDateString()
                           ? 'bg-orange-500'
-                          : day.calories > 0
-                            ? 'bg-[#0F2C5C]'
-                            : 'bg-[#1E2530]'
+                          : day.calories > 0 ? 'bg-[#0F2C5C]' : 'bg-[#1E2530]'
                       }`}
                       style={{ height: `${Math.max((day.calories / maxCals) * 80, day.calories > 0 ? 8 : 4)}px` }}
                     />
                   </div>
                   <span className="text-gray-500 text-xs">{day.day}</span>
-                  {day.calories > 0 && (
-                    <span className="text-orange-400 text-xs">{day.calories}</span>
-                  )}
+                  {day.calories > 0 && <span className="text-orange-400 text-xs">{day.calories}</span>}
                 </div>
               ))}
             </div>
@@ -195,9 +190,7 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
             <Calendar
               onChange={setSelectedDate}
               value={selectedDate}
-              tileClassName={({ date }) =>
-                datesWithScans.includes(date.toDateString()) ? 'has-scan' : null
-              }
+              tileClassName={({ date }) => datesWithScans.includes(date.toDateString()) ? 'has-scan' : null}
             />
           </div>
 
@@ -462,63 +455,49 @@ function App() {
     setTimeout(startCamera, 100)
   }
 
- const confirmPicture = async () => {
-  setScreen('loading')
-  try {
-    // created an image element from the captured base64 image, this should capture the food
-    const img = new Image()
-    img.src = capturedImage
-
-    await new Promise((resolve, reject) => {
-      img.onload = resolve
-      img.onerror = reject
-    })
-
-    // using the upgraded TensorFlow CocoSSD with the image element, this should capture food
-    const { classifyFood } = await import('./services/tensorflowRecognition')
-    const foodPredictions = await classifyFood(img)
-    console.log('Food predictions:', foodPredictions)
-
-    if (!foodPredictions || foodPredictions.length === 0) {
-      alert('No food detected. Please take a photo of food.')
-      setScreen('preview')
-      return
-    }
-
-    const topResult = foodPredictions[0]
-    setNutritionResult(topResult)
-
-    setLogbookEntries(prev => [{
-      id: Date.now(),
-      name: topResult.name,
-      calories: topResult.nutrition.calories,
-      protein: parseFloat(topResult.nutrition.protein) || 0,
-      carbs: parseFloat(topResult.nutrition.carbs) || 0,
-      fat: parseFloat(topResult.nutrition.fat) || 0,
-      meal: 'snack',
-      timestamp: new Date(),
-      scannedViaBarcode: false,
-    }, ...prev])
-
-    setScreen('results')
-    setDrawerOpen(true)
-
-    await fetch(`${API_URL}/log-usage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        foodName: topResult.name,
+  const confirmPicture = async () => {
+    setScreen('loading')
+    try {
+      const img = new Image()
+      img.src = capturedImage
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+      })
+      const { classifyFood } = await import('./services/tensorflowRecognition')
+      const foodPredictions = await classifyFood(img)
+      console.log('Food predictions:', foodPredictions)
+      if (!foodPredictions || foodPredictions.length === 0) {
+        alert('No food detected. Please take a photo of food.')
+        setScreen('preview')
+        return
+      }
+      const topResult = foodPredictions[0]
+      setNutritionResult(topResult)
+      setLogbookEntries(prev => [{
+        id: Date.now(),
+        name: topResult.name,
         calories: topResult.nutrition.calories,
-        timestamp: new Date().toISOString(),
-      }),
-    })
-
-  } catch (error) {
-    console.error('Error:', error)
-    alert('Something went wrong. Please try again.')
-    setScreen('preview')
+        protein: parseFloat(topResult.nutrition.protein) || 0,
+        carbs: parseFloat(topResult.nutrition.carbs) || 0,
+        fat: parseFloat(topResult.nutrition.fat) || 0,
+        meal: 'snack',
+        timestamp: new Date(),
+        scannedViaBarcode: false,
+      }, ...prev])
+      setScreen('results')
+      setDrawerOpen(true)
+      await fetch(`${API_URL}/log-usage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foodName: topResult.name, calories: topResult.nutrition.calories, timestamp: new Date().toISOString() }),
+      })
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Something went wrong. Please try again.')
+      setScreen('preview')
+    }
   }
-}
 
   const resetApp = () => {
     setScreen('home')
@@ -544,7 +523,7 @@ function App() {
   ]
 
   const Layout = ({ children, activeTab, onTabClick }) => (
-    <div className="min-h-screen w-full bg-white flex flex-col">
+    <div className="min-h-screen w-full bg-[#0D1117] flex flex-col">
       <NavBar activeTab={activeTab} onTabClick={onTabClick} />
       <div className="flex-1 flex flex-col">{children}</div>
     </div>
@@ -593,16 +572,37 @@ function App() {
     return (
       <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 pb-28 overflow-y-auto">
+
           <div className="mb-6 mt-2">
-            <h1 className="text-3xl font-bold text-white">{greeting()}</h1>
+            <h1 className="text-3xl font-bold text-white">{greeting()}, {user?.name?.split(' ')[0] || 'there'}</h1>
             <p className="text-gray-400 mt-1 text-base">You are {remaining.calories > 0 ? remaining.calories : 0} kcal away from your goal</p>
           </div>
 
+          {!hasAnyMeals && (
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 mb-4">
+              <h3 className="text-orange-400 font-semibold mb-3">Getting Started</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">1</div>
+                  <p className="text-gray-300 text-sm">Tap the <span className="text-orange-400 font-medium">orange camera button</span> below to scan your food</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">2</div>
+                  <p className="text-gray-300 text-sm">Point your camera at food and tap <span className="text-orange-400 font-medium">Confirm</span> to analyse it</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">3</div>
+                  <p className="text-gray-300 text-sm">Tap <span className="text-orange-400 font-medium">Add to My Meals</span> to log it and track your nutrition</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-[#161B22] rounded-2xl p-6 mb-4 border border-[#1E2530]">
             <div className="flex justify-between items-center mb-4">
-    <h3 className="text-white font-semibold">Total Calorie Intake</h3>
-    <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
-  </div>
+              <h3 className="text-white font-semibold">Total Calorie Intake</h3>
+              <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+            </div>
             <div className="flex flex-col items-center">
               <div className="relative w-52 h-52">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 220 220">
@@ -640,7 +640,7 @@ function App() {
               <div className="flex flex-col items-center py-6">
                 <ClipboardIcon />
                 <p className="text-white text-sm mt-4">No meals logged yet</p>
-                <p className="text-gray-500 text-xs mt-1">Tap + to add your first meal</p>
+                <p className="text-gray-500 text-xs mt-1">Tap the camera button to scan food</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -715,9 +715,28 @@ function App() {
             </div>
           </div>
 
-          <button onClick={() => setScreen('camera')} className="fixed bottom-24 right-4 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-lg z-40 hover:bg-orange-600 transition-colors">
-            <Camera className="w-7 h-7 text-white" />
-          </button>
+          {/* Floating camera button with pulsating ring */}
+          <div className="fixed bottom-24 right-4 flex flex-col items-center gap-1 z-40">
+            <span className="text-white text-xs bg-black/60 px-2 py-1 rounded-full">Scan Food</span>
+            <button
+              onClick={() => setScreen('camera')}
+              style={{
+                width: '64px',
+                height: '64px',
+                backgroundColor: '#F97316',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                cursor: 'pointer',
+                animation: !hasAnyMeals ? 'pulse-ring 2s infinite' : 'none',
+              }}
+            >
+              <Camera className="w-7 h-7 text-white" />
+            </button>
+          </div>
+
         </div>
       </Layout>
     )
@@ -895,7 +914,7 @@ function App() {
   }
 
   if (screen === 'camera') return (
-    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center relative">
+    <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center relative">
       <video ref={videoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
       <canvas ref={canvasRef} className="hidden" />
       <div className="absolute inset-0 bg-black/30" />
@@ -910,7 +929,7 @@ function App() {
   )
 
   if (screen === 'preview') return (
-    <div className="min-h-screen w-full bg-white flex flex-col">
+    <div className="min-h-screen w-full bg-black flex flex-col">
       <div className="flex-1 relative">
         <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
       </div>
@@ -928,9 +947,9 @@ function App() {
   )
 
   if (screen === 'loading') return (
-    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center">
-      <Loader2 className="w-16 h-16 animate-spin text-gray-800 mb-4" />
-      <p className="text-gray-600 font-medium">Analyzing your meal...</p>
+    <div className="min-h-screen w-full bg-[#0D1117] flex flex-col items-center justify-center">
+      <Loader2 className="w-16 h-16 animate-spin text-orange-500 mb-4" />
+      <p className="text-white font-medium">Analyzing your meal...</p>
       <p className="text-gray-400 text-sm mt-2">Detecting nutrients</p>
     </div>
   )
@@ -970,7 +989,7 @@ function App() {
               </Card>
               <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Beef className="w-4 h-4" /><span className="text-xs font-medium">Fat</span></div>
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Droplets className="w-4 h-4" /><span className="text-xs font-medium">Fat</span></div>
                   <p className="text-2xl font-bold text-yellow-700">{nutritionResult?.nutrition?.fat}</p>
                   <p className="text-xs text-yellow-500">g</p>
                 </CardContent>
