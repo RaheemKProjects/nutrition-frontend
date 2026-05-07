@@ -1,80 +1,85 @@
 import * as cocoSsd from '@tensorflow-models/coco-ssd'
+import * as mobilenet from '@tensorflow-models/mobilenet'
 import '@tensorflow/tfjs'
 import { getCalorieRange } from '../data/foodCalories'
 
-let model = null
+let cocoModel = null
+let mobileModel = null
 
-// the FOOD_CLASSES - CocoSSD food items we want to detect, do it this for now to see if it works
 const FOOD_CLASSES = {
-  // fruit 
+  // Fruits
   'banana': true,
   'apple': true,
-   'orange': true,
-  'sandwich': true,
-  'grape': true,
+  'orange': true,
+  'lemon': true,
   'strawberry': true,
-  'pear': true,
-  'melon': true,
-  'watermelon': true,
-  'kiwi': true,
-  'mango': true,
   'pineapple': true,
-  'passion fruit': true,
-  'blueberry': true,
-  'blackberry': true,
-  'peach': true,
 
-  //vegetables
+  // Vegetables
   'broccoli': true,
   'carrot': true,
   'cucumber': true,
-  'tomato': true,
-  'lettuce': true, 
-  'spinach': true,
+  'mushroom': true,
+  'cauliflower': true,
   'onion': true,
-  'pepper': true,
 
-  // junk food
+  // Fast Food
   'pizza': true,
   'hot dog': true,
-  'cake': true,
+  'hotdog': true,
   'donut': true,
-  'cookie': true,
-  'fries': true,
-  'burger': true,
-  'chips': true,
+  'cake': true,
+  'sandwich': true,
+  'cheeseburger': true,
+  'ice cream': true,
+  'french fries': true,
 }
 
-export async function loadModel() {
-  if (!model) {
-    console.log('Loading CocoSSD model...')
-    model = await cocoSsd.load()
-    console.log('CocoSSD model loaded!')
-  }
-  return model
+// Load both models at the same time
+export async function loadModels() {
+  console.log('Loading both models...')
+
+  // Load both simultaneously using Promise.all
+  const [coco, mobile] = await Promise.all([
+    cocoSsd.load(),
+    mobilenet.load()
+  ])
+
+  cocoModel = coco
+  mobileModel = mobile
+
+  console.log('Both models loaded!')
 }
 
 export async function classifyFood(imgElement) {
-  const m = await loadModel()
+  // Load models if not already loaded
+  if (!cocoModel || !mobileModel) {
+    await loadModels()
+  }
 
-  // CocoSSD detect - can find MULTIPLE objects at once
-  const predictions = await m.detect(imgElement)
-  console.log('Raw CocoSSD predictions:', predictions)
+  // Run both models at the same time
+  const [cocoResults, mobileResults] = await Promise.all([
+    cocoModel.detect(imgElement),
+    mobileModel.classify(imgElement)
+  ])
+
+  console.log('CocoSSD results:', cocoResults)
+  console.log('MobileNet results:', mobileResults)
 
   const foodPredictions = []
+  const seenFoods = new Set() // prevent duplicates
 
-  predictions.forEach(prediction => {
+  // Process CocoSSD results
+  cocoResults.forEach(prediction => {
     const className = prediction.class.toLowerCase()
-
-    //  do it like Cain for now 
-    if (FOOD_CLASSES[className]) {
-      // valid food
+    if (FOOD_CLASSES[className] && !seenFoods.has(className)) {
       const cal = getCalorieRange(className)
       if (cal) {
+        seenFoods.add(className)
         foodPredictions.push({
           name: prediction.class,
           confidence: (prediction.score * 100).toFixed(1),
-          count: 1,
+          source: 'CocoSSD',
           nutrition: {
             calories: `${cal.min} - ${cal.max}`,
             protein: cal.protein,
@@ -84,22 +89,39 @@ export async function classifyFood(imgElement) {
         })
       }
     } else {
-      // ignore
-      console.log('Not food, ignoring:', prediction.class)
+      console.log('Not food (CocoSSD), ignoring:', prediction.class)
     }
   })
 
-  // Count multiple items of same food
-  const grouped = foodPredictions.reduce((acc, item) => {
-    const existing = acc.find(i => i.name === item.name)
-    if (existing) {
-      existing.count += 1
-      existing.nutrition.calories = `${parseInt(item.nutrition.calories) * existing.count} - ${parseInt(item.nutrition.calories.split('-')[1]) * existing.count}`
-    } else {
-      acc.push(item)
-    }
-    return acc
-  }, [])
+  // Process MobileNet results
+  mobileResults.forEach(prediction => {
+    const className = prediction.className.toLowerCase()
 
-  return grouped
+    Object.keys(FOOD_CLASSES).forEach(food => {
+      if (className.includes(food) && !seenFoods.has(food)) {
+        const cal = getCalorieRange(food)
+        if (cal) {
+          seenFoods.add(food)
+          foodPredictions.push({
+            name: food,
+            confidence: (prediction.probability * 100).toFixed(1),
+            source: 'MobileNet',
+            nutrition: {
+              calories: `${cal.min} - ${cal.max}`,
+              protein: cal.protein,
+              carbs: cal.carbs,
+              fat: cal.fat,
+            }
+          })
+        }
+      } else {
+        console.log('Not food (MobileNet), ignoring:', className)
+      }
+    })
+  })
+
+  // Sort by confidence - highest first
+  return foodPredictions.sort((a, b) =>
+    parseFloat(b.confidence) - parseFloat(a.confidence)
+  )
 }

@@ -1,6 +1,6 @@
 const calories = {
   'banana': { min: 90, max: 120, protein: '1.1g', carbs: '23g', fat: '0.3g' },
-  'onion': { min: 40, max: 60, protein: '1.1g', carbs: '9g', fat: '0.1g' },
+  'onion': { min: 30, max: 60, protein: '1.1g', carbs: '9g', fat: '0.1g', category: 'vegetable' },
   'pepper': { min: 20, max: 40, protein: '0.9g', carbs: '6g', fat: '0.2g' },
   'lettuce': { min: 5, max: 15, protein: '0.5g', carbs: '2g', fat: '0.1g' },
   'spinach': { min: 20, max: 30, protein: '2.9g', carbs: '3.6g', fat: '0.4g' },
