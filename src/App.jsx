@@ -242,6 +242,46 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
   )
 }
 
+// ← CHANGED: AuthScreen moved outside App() to fix keyboard dismissing bug
+const AuthScreen = ({ authMode, setAuthMode, authEmail, setAuthEmail, authPassword, setAuthPassword, authName, setAuthName, authError, authLoading, onLogin, onRegister }) => (
+  <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-6 overflow-y-auto">
+    <div className="w-full max-w-sm">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">NutriSnap</h1>
+        <p className="text-gray-400">{authMode === 'login' ? 'Welcome back!' : 'Create your account'}</p>
+      </div>
+      <div className="bg-gray-900 rounded-xl p-6 space-y-4">
+        {authMode === 'register' && (
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <input type="text" placeholder="Full Name" value={authName} onChange={(e) => setAuthName(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
+          </div>
+        )}
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+          <input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
+        </div>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+          <input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
+        </div>
+        {authError && <p className="text-red-500 text-sm text-center">{authError}</p>}
+        <Button onClick={authMode === 'login' ? onLogin : onRegister} disabled={authLoading} className="w-full bg-[#0F2C5C] hover:bg-[#0a2349] py-3">
+          {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{authMode === 'login' ? 'Sign In' : 'Create Account'}<ArrowRight className="w-5 h-5 ml-2" /></>}
+        </Button>
+        <div className="text-center pt-4">
+          <button onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login') }} className="text-gray-400 text-sm hover:text-white">
+            {authMode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
 function App() {
   const [screen, setScreen] = useState('login')
   const [capturedImage, setCapturedImage] = useState(null)
@@ -288,7 +328,10 @@ function App() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('nutrisnap_user')
-    if (savedUser) setUser(JSON.parse(savedUser))
+    if (savedUser) {
+      setUser(JSON.parse(savedUser))
+      setScreen('home')
+    }
   }, [])
 
   const handleRegister = () => {
@@ -334,44 +377,16 @@ function App() {
     setScreen('login')
   }
 
-  const AuthScreen = () => (
-    <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">NutriSnap</h1>
-          <p className="text-gray-400">{authMode === 'login' ? 'Welcome back!' : 'Create your account'}</p>
-        </div>
-        <div className="bg-gray-900 rounded-xl p-6 space-y-4">
-          {authMode === 'register' && (
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input type="text" placeholder="Full Name" value={authName} onChange={(e) => setAuthName(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
-            </div>
-          )}
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
-          </div>
-          {authError && <p className="text-red-500 text-sm text-center">{authError}</p>}
-          <Button onClick={authMode === 'login' ? handleLogin : handleRegister} disabled={authLoading} className="w-full bg-[#0F2C5C] hover:bg-[#0a2349] py-3">
-            {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{authMode === 'login' ? 'Sign In' : 'Create Account'}<ArrowRight className="w-5 h-5 ml-2" /></>}
-          </Button>
-          <div className="text-center pt-4">
-            <button onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError('') }} className="text-gray-400 text-sm hover:text-white">
-              {authMode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  // ← CHANGED: authProps object to pass to AuthScreen
+  const authProps = {
+    authMode, setAuthMode,
+    authEmail, setAuthEmail,
+    authPassword, setAuthPassword,
+    authName, setAuthName,
+    authError, authLoading,
+    onLogin: handleLogin,
+    onRegister: handleRegister,
+  }
 
   const checkCameraSupport = () => {
     try {
@@ -512,10 +527,10 @@ function App() {
     return () => stopCamera()
   }, [screen])
 
-  if (screen === 'login') return <AuthScreen />
-  if (screen === 'register') return <AuthScreen />
-  // changed to auth screen 
-  if (!user) return <AuthScreen />
+  // ← CHANGED: now passes authProps to AuthScreen instead of rendering inline
+  if (screen === 'login') return <AuthScreen {...authProps} />
+  if (screen === 'register') return <AuthScreen {...authProps} />
+  if (!user) return <AuthScreen {...authProps} />
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -717,7 +732,6 @@ function App() {
             </div>
           </div>
 
-          {/* Floating camera button with pulsating ring */}
           <div className="fixed bottom-24 right-4 flex flex-col items-center gap-1 z-40">
             <span className="text-white text-xs bg-black/60 px-2 py-1 rounded-full">Scan Food</span>
             <button
