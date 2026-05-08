@@ -247,7 +247,7 @@ const AuthScreen = ({ authMode, setAuthMode, authEmail, setAuthEmail, authPasswo
   <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-6 overflow-y-auto">
     <div className="w-full max-w-sm">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">NutriSnap</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">CalCount</h1>
         <p className="text-gray-400">{authMode === 'login' ? 'Welcome back!' : 'Create your account'}</p>
       </div>
       <div className="bg-gray-900 rounded-xl p-6 space-y-4">
