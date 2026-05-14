@@ -7,7 +7,7 @@ let cocoModel = null
 let mobileModel = null
 
 const FOOD_CLASSES = {
-  // Fruits
+  
   'banana': true,
   'apple': true,
   'orange': true,
@@ -15,7 +15,7 @@ const FOOD_CLASSES = {
   'strawberry': true,
   'pineapple': true,
 
-  // Vegetables
+  
   'broccoli': true,
   'carrot': true,
   'cucumber': true,
@@ -35,11 +35,11 @@ const FOOD_CLASSES = {
   'french fries': true,
 }
 
-// Load both models at the same time
+
 export async function loadModels() {
   console.log('Loading both models...')
 
-  // Load both simultaneously using Promise.all
+  
   const [coco, mobile] = await Promise.all([
     cocoSsd.load(),
     mobilenet.load()
@@ -52,7 +52,7 @@ export async function loadModels() {
 }
 
 export async function classifyFood(imgElement) {
-  // Load models if not already loaded
+  
   if (!cocoModel || !mobileModel) {
     await loadModels()
   }
@@ -69,7 +69,7 @@ export async function classifyFood(imgElement) {
   const foodPredictions = []
   const seenFoods = new Set() // prevent duplicates
 
-  // Process CocoSSD results
+  
   cocoResults.forEach(prediction => {
     const className = prediction.class.toLowerCase()
     if (FOOD_CLASSES[className] && !seenFoods.has(className)) {
@@ -93,7 +93,7 @@ export async function classifyFood(imgElement) {
     }
   })
 
-  // Process MobileNet results
+  /
   mobileResults.forEach(prediction => {
     const className = prediction.className.toLowerCase()
 
@@ -120,7 +120,7 @@ export async function classifyFood(imgElement) {
     })
   })
 
-  // Sort by confidence - highest first
+  
   return foodPredictions.sort((a, b) =>
     parseFloat(b.confidence) - parseFloat(a.confidence)
   )

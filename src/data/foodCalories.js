@@ -1,6 +1,6 @@
 const calories = {
   'banana': { min: 90, max: 120, protein: '1.1g', carbs: '23g', fat: '0.3g' },
-  'onion': { min: 30, max: 60, protein: '1.1g', carbs: '9g', fat: '0.1g', category: 'vegetable' },
+  'onion': { min: 30, max: 60, protein: '1.1g', carbs: '9g', fat: '0.1g' },
   'pepper': { min: 20, max: 40, protein: '0.9g', carbs: '6g', fat: '0.2g' },
   'lettuce': { min: 5, max: 15, protein: '0.5g', carbs: '2g', fat: '0.1g' },
   'spinach': { min: 20, max: 30, protein: '2.9g', carbs: '3.6g', fat: '0.4g' },
@@ -18,7 +18,7 @@ const calories = {
   'donut': { min: 250, max: 350, protein: '4g', carbs: '35g', fat: '14g' },
 }
 
-// like Cain suggestions for now
+
 export function getCalorieRange(foodName) {
   const food = foodName.toLowerCase()
   const cal = calories[food]
@@ -27,10 +27,10 @@ export function getCalorieRange(foodName) {
 
   if (cal) {
     text = food + ' - ' + cal.min + ' to ' + cal.max + ' kcal'
-    console.log(text) // e.g. "pizza - 250 to 350 kcal"
+    console.log(text) 
     return cal
   } else {
-    // type an else here in case it doesn't work
+   
     text = food + ' - calorie data not found'
     console.log(text)
     return null
