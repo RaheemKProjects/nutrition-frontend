@@ -125,7 +125,7 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(today)
       date.setDate(today.getDate() - (6 - i))
-      const dayScans = logbookEntries.filter(scan =>
+      const dayScans = logbookEntries.filter(scan => 
         new Date(scan.timestamp).toDateString() === date.toDateString()
       )
       const totalCals = dayScans.reduce((sum, scan) => sum + (parseFloat(scan.calories) || 0), 0)
@@ -192,6 +192,27 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
                   {day.calories > 0 && (
                     <span className="text-orange-400 text-xs">{day.calories}</span>
                   )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-[#0D1117] rounded-xl p-4 mb-4 border border-[#1E2530]">
+            <h3 className="text-white font-semibold mb-3 text-sm">This Week</h3>
+            <div className="flex justify-between gap-2">
+              {weekDays.map((day, index) => (
+                <div key={index} className="flex flex-col items-center flex-1">
+                  <div 
+                    className={`w-full rounded-t-md transition-all ${
+                      index === new Date().getDay() - 1
+                        ? 'bg-orange-500'
+                        : day.calories > 0
+                          ? 'bg-[#0F2C5C]'
+                          : 'bg-[#1E2530]'
+                    }`}
+                    style={{ height: '60px' }}
+                  />
+                  <span className="text-gray-500 text-xs mt-1">{day.label}</span>
                 </div>
               ))}
             </div>
@@ -268,28 +289,19 @@ function App() {
     fat: 70
   })
 
-  // ← CHANGED: persists meals to localStorage so they survive page refresh
-  const [meals, setMeals] = useState(() => {
-    const saved = localStorage.getItem('calcount_meals')
-    return saved ? JSON.parse(saved) : [
-      { id: 1, name: 'Breakfast', items: [] },
-      { id: 2, name: 'Lunch', items: [] },
-      { id: 3, name: 'Dinner', items: [] },
-      { id: 4, name: 'Snacks', items: [] }
-    ]
-  })
+  const [meals, setMeals] = useState([
+    { id: 1, name: 'Breakfast', items: [] },
+    { id: 2, name: 'Lunch', items: [] },
+    { id: 3, name: 'Dinner', items: [] },
+    { id: 4, name: 'Snacks', items: [] }
+  ])
 
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showPlanScanner, setShowPlanScanner] = useState(false)
   const [newGoal, setNewGoal] = useState({ ...dietGoals })
 
-  // ← CHANGED: persists logbook entries to localStorage so they survive page refresh
-  const [logbookEntries, setLogbookEntries] = useState(() => {
-    const saved = localStorage.getItem('calcount_logbook')
-    return saved ? JSON.parse(saved) : []
-  })
-
+  const [logbookEntries, setLogbookEntries] = useState([])
   const [expandedEntry, setExpandedEntry] = useState(null)
   const [logbookFilter, setLogbookFilter] = useState('All')
   const [logbookSearch, setLogbookSearch] = useState('')
@@ -302,16 +314,6 @@ function App() {
     const savedUser = localStorage.getItem('nutrisnap_user')
     if (savedUser) setUser(JSON.parse(savedUser))
   }, [])
-
-  // ← NEW: save meals to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('calcount_meals', JSON.stringify(meals))
-  }, [meals])
-
-  // ← NEW: save logbook entries to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('calcount_logbook', JSON.stringify(logbookEntries))
-  }, [logbookEntries])
 
   const handleRegister = () => {
     setAuthLoading(true)
@@ -474,7 +476,7 @@ function App() {
   const retakePicture = () => {
     setCapturedImage(null)
     setScreen('camera')
-    setTimeout(startCamera, 100)
+setTimeout(startCamera, 100)
   }
 
   const confirmPicture = async () => {
@@ -506,7 +508,7 @@ function App() {
   ]
 
   const Layout = ({ children, activeTab, onTabClick }) => (
-    <div className="min-h-screen w-full bg-[#0D1117] flex flex-col">
+    <div className="min-h-screen w-full bg-white flex flex-col">
       <NavBar activeTab={activeTab} onTabClick={onTabClick} />
       <div className="flex-1 flex flex-col">{children}</div>
     </div>
@@ -562,9 +564,9 @@ function App() {
 
           <div className="bg-[#161B22] rounded-2xl p-6 mb-4 border border-[#1E2530]">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white font-semibold">Total Calorie Intake</h3>
-              <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
-            </div>
+    <h3 className="text-white font-semibold">Total Calorie Intake</h3>
+    <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+  </div>
             <div className="flex flex-col items-center">
               <div className="relative w-52 h-52">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 220 220">
@@ -709,7 +711,7 @@ function App() {
       if (entryDate.getTime() === yesterday.getTime()) return 'Yesterday'
       return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
     }
-    const formatTime = (date) => new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
     const getMealIcon = (mealType) => {
       const mapping = { 'breakfast': MealIconBreakfast, 'lunch': MealIconLunch, 'dinner': MealIconDinner, 'snack': MealIconSnack }
       return mapping[mealType] || MealIconSnack
@@ -721,7 +723,7 @@ function App() {
       return true
     })
     const groupedEntries = filteredEntries.reduce((groups, entry) => {
-      const header = formatDateHeader(new Date(entry.timestamp))
+      const header = formatDateHeader(entry.timestamp)
       if (!groups[header]) groups[header] = []
       groups[header].push(entry)
       return groups
@@ -729,7 +731,7 @@ function App() {
     const toggleExpand = (id) => setExpandedEntry(expandedEntry === id ? null : id)
     const filterOptions = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Barcode']
     const getMealLabel = (meal) => meal.charAt(0).toUpperCase() + meal.slice(1)
-    const weekEntries = logbookEntries.filter(e => { const weekAgo = new Date(Date.now() - 7 * 86400000); return new Date(e.timestamp) >= weekAgo })
+    const weekEntries = logbookEntries.filter(e => { const weekAgo = new Date(Date.now() - 7 * 86400000); return e.timestamp >= weekAgo })
     const avgCalories = dailyAverage
     const mostLogged = weekEntries.length > 0
       ? Object.entries(weekEntries.reduce((counts, e) => { counts[e.name] = (counts[e.name] || 0) + 1; return counts }, {})).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
@@ -857,7 +859,7 @@ function App() {
   }
 
   if (screen === 'camera') return (
-    <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center relative">
+    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center relative">
       <video ref={videoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
       <canvas ref={canvasRef} className="hidden" />
       <div className="absolute inset-0 bg-black/30" />
@@ -872,7 +874,7 @@ function App() {
   )
 
   if (screen === 'preview') return (
-    <div className="min-h-screen w-full bg-black flex flex-col">
+    <div className="min-h-screen w-full bg-white flex flex-col">
       <div className="flex-1 relative">
         <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
       </div>
@@ -890,9 +892,9 @@ function App() {
   )
 
   if (screen === 'loading') return (
-    <div className="min-h-screen w-full bg-[#0D1117] flex flex-col items-center justify-center">
-      <Loader2 className="w-16 h-16 animate-spin text-orange-500 mb-4" />
-      <p className="text-white font-medium">Analyzing your meal...</p>
+    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center">
+      <Loader2 className="w-16 h-16 animate-spin text-gray-800 mb-4" />
+      <p className="text-gray-600 font-medium">Analyzing your meal...</p>
       <p className="text-gray-400 text-sm mt-2">Detecting nutrients</p>
     </div>
   )
@@ -932,7 +934,7 @@ function App() {
               </Card>
               <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Droplets className="w-4 h-4" /><span className="text-xs font-medium">Fat</span></div>
+                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Beef className="w-4 h-4" /><span className="text-xs font-medium">Fat</span></div>
                   <p className="text-2xl font-bold text-yellow-700">{nutritionResult?.nutrition?.fat}</p>
                   <p className="text-xs text-yellow-500">g</p>
                 </CardContent>
@@ -1028,14 +1030,14 @@ function App() {
                     {meal.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
                         <span className="text-gray-300">{item.name}</span>
-                        <span className="text-orange-400">{item.calories} kcal</span>
+                        <span className="text-[#0F2C5C]">{item.calories} kcal</span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm">No items added yet</p>
                 )}
-                <button className="mt-2 text-orange-500 text-sm font-medium">+ Add Food</button>
+                <button className="mt-2 text-[#0F2C5C] text-sm font-medium">+ Add Food</button>
               </div>
             ))}
           </div>
