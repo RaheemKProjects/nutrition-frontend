@@ -1,4 +1,3 @@
-import Calendar from 'react-calendar'
 import { useState, useRef, useEffect } from 'react'
 import { Camera, RotateCcw, Check, Loader2, Flame, Wheat, Beef, Droplets, Home, Calendar as CalendarIcon, BarChart3, Settings, User, Lock, Mail, ArrowRight, LogOut } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
@@ -120,6 +119,25 @@ const ClipboardIcon = () => (
 const NutritionCalendar = ({ onClose, logbookEntries }) => {
   const [selectedDate, setSelectedDate] = useState(new Date())
 
+  const weekDays = (() => {
+    const days = []
+    const today = new Date()
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() - (6 - i))
+      const dayScans = logbookEntries.filter(scan =>
+        new Date(scan.timestamp).toDateString() === date.toDateString()
+      )
+      const totalCals = dayScans.reduce((sum, scan) => sum + (parseFloat(scan.calories) || 0), 0)
+      days.push({
+        label: date.toLocaleDateString('en-GB', { weekday: 'short' }),
+        calories: totalCals,
+        date: date.toDateString()
+      })
+    }
+    return days
+  })()
+
   const scansForDate = logbookEntries.filter(scan => {
     const scanDate = new Date(scan.timestamp).toDateString()
     return scanDate === selectedDate.toDateString()
@@ -151,6 +169,7 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
           <h2 className="text-white font-semibold text-lg">Nutrition Calendar</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">✕</button>
         </div>
+
         <div className="flex-1 overflow-y-auto p-4">
           <div className="bg-[#0D1117] rounded-xl p-4 mb-4 border border-[#1E2530]">
             <h3 className="text-white font-semibold mb-4 text-sm">This Week</h3>
@@ -162,36 +181,20 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
                       className={`w-full rounded-t-md transition-all ${
                         day.date === new Date().toDateString()
                           ? 'bg-orange-500'
-                          : day.calories > 0 ? 'bg-[#0F2C5C]' : 'bg-[#1E2530]'
+                          : day.calories > 0
+                            ? 'bg-[#0F2C5C]'
+                            : 'bg-[#1E2530]'
                       }`}
                       style={{ height: `${Math.max((day.calories / maxCals) * 80, day.calories > 0 ? 8 : 4)}px` }}
                     />
                   </div>
                   <span className="text-gray-500 text-xs">{day.day}</span>
-                  {day.calories > 0 && <span className="text-orange-400 text-xs">{day.calories}</span>}
+                  {day.calories > 0 && (
+                    <span className="text-orange-400 text-xs">{day.calories}</span>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="bg-[#0D1117] rounded-xl p-4 mb-4 border border-[#1E2530]">
-            <h3 className="text-white font-semibold mb-3 text-sm">Select a Date</h3>
-            <style>{`
-              .react-calendar { background: transparent; border: none; color: white; font-family: inherit; width: 100%; }
-              .react-calendar__tile { background: transparent; color: #9ca3af; border-radius: 8px; padding: 8px; }
-              .react-calendar__tile:hover { background: #1E2530; color: white; }
-              .react-calendar__tile--active { background: #F97316 !important; color: white !important; border-radius: 8px; }
-              .react-calendar__tile--now { background: #0F2C5C; color: white; border-radius: 8px; }
-              .react-calendar__navigation button { background: transparent; color: white; font-size: 14px; }
-              .react-calendar__navigation button:hover { background: #1E2530; border-radius: 8px; }
-              .react-calendar__month-view__weekdays { color: #6b7280; font-size: 11px; }
-              .has-scan { background: #0F2C5C !important; color: white !important; }
-            `}</style>
-            <Calendar
-              onChange={setSelectedDate}
-              value={selectedDate}
-              tileClassName={({ date }) => datesWithScans.includes(date.toDateString()) ? 'has-scan' : null}
-            />
           </div>
 
           <div className="bg-[#0D1117] rounded-xl p-4 border border-[#1E2530]">
@@ -242,48 +245,8 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
   )
 }
 
-// ← CHANGED: AuthScreen moved outside App() to fix keyboard dismissing bug
-const AuthScreen = ({ authMode, setAuthMode, authEmail, setAuthEmail, authPassword, setAuthPassword, authName, setAuthName, authError, authLoading, onLogin, onRegister }) => (
-  <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-6 overflow-y-auto">
-    <div className="w-full max-w-sm">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">CalCount</h1>
-        <p className="text-gray-400">{authMode === 'login' ? 'Welcome back!' : 'Create your account'}</p>
-      </div>
-      <div className="bg-gray-900 rounded-xl p-6 space-y-4">
-        {authMode === 'register' && (
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input type="text" placeholder="Full Name" value={authName} onChange={(e) => setAuthName(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
-          </div>
-        )}
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-          <input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
-        </div>
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-          <input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
-        </div>
-        {authError && <p className="text-red-500 text-sm text-center">{authError}</p>}
-        <Button onClick={authMode === 'login' ? onLogin : onRegister} disabled={authLoading} className="w-full bg-[#0F2C5C] hover:bg-[#0a2349] py-3">
-          {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{authMode === 'login' ? 'Sign In' : 'Create Account'}<ArrowRight className="w-5 h-5 ml-2" /></>}
-        </Button>
-        <div className="text-center pt-4">
-          <button onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login') }} className="text-gray-400 text-sm hover:text-white">
-            {authMode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)
-
 function App() {
-  const [screen, setScreen] = useState('login')
+  const [screen, setScreen] = useState('home')
   const [capturedImage, setCapturedImage] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(true)
   const [showCalendar, setShowCalendar] = useState(false)
@@ -305,19 +268,28 @@ function App() {
     fat: 70
   })
 
-  const [meals, setMeals] = useState([
-    { id: 1, name: 'Breakfast', items: [] },
-    { id: 2, name: 'Lunch', items: [] },
-    { id: 3, name: 'Dinner', items: [] },
-    { id: 4, name: 'Snacks', items: [] }
-  ])
+  // ← CHANGED: persists meals to localStorage so they survive page refresh
+  const [meals, setMeals] = useState(() => {
+    const saved = localStorage.getItem('calcount_meals')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'Breakfast', items: [] },
+      { id: 2, name: 'Lunch', items: [] },
+      { id: 3, name: 'Dinner', items: [] },
+      { id: 4, name: 'Snacks', items: [] }
+    ]
+  })
 
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showPlanScanner, setShowPlanScanner] = useState(false)
   const [newGoal, setNewGoal] = useState({ ...dietGoals })
 
-  const [logbookEntries, setLogbookEntries] = useState([])
+  // ← CHANGED: persists logbook entries to localStorage so they survive page refresh
+  const [logbookEntries, setLogbookEntries] = useState(() => {
+    const saved = localStorage.getItem('calcount_logbook')
+    return saved ? JSON.parse(saved) : []
+  })
+
   const [expandedEntry, setExpandedEntry] = useState(null)
   const [logbookFilter, setLogbookFilter] = useState('All')
   const [logbookSearch, setLogbookSearch] = useState('')
@@ -328,11 +300,18 @@ function App() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('nutrisnap_user')
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
-      setScreen('home')
-    }
+    if (savedUser) setUser(JSON.parse(savedUser))
   }, [])
+
+  // ← NEW: save meals to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('calcount_meals', JSON.stringify(meals))
+  }, [meals])
+
+  // ← NEW: save logbook entries to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('calcount_logbook', JSON.stringify(logbookEntries))
+  }, [logbookEntries])
 
   const handleRegister = () => {
     setAuthLoading(true)
@@ -377,16 +356,44 @@ function App() {
     setScreen('login')
   }
 
-  // ← CHANGED: authProps object to pass to AuthScreen
-  const authProps = {
-    authMode, setAuthMode,
-    authEmail, setAuthEmail,
-    authPassword, setAuthPassword,
-    authName, setAuthName,
-    authError, authLoading,
-    onLogin: handleLogin,
-    onRegister: handleRegister,
-  }
+  const AuthScreen = () => (
+    <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">NutriSnap</h1>
+          <p className="text-gray-400">{authMode === 'login' ? 'Welcome back!' : 'Create your account'}</p>
+        </div>
+        <div className="bg-gray-900 rounded-xl p-6 space-y-4">
+          {authMode === 'register' && (
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <input type="text" placeholder="Full Name" value={authName} onChange={(e) => setAuthName(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
+            </div>
+          )}
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none" />
+          </div>
+          {authError && <p className="text-red-500 text-sm text-center">{authError}</p>}
+          <Button onClick={authMode === 'login' ? handleLogin : handleRegister} disabled={authLoading} className="w-full bg-[#0F2C5C] hover:bg-[#0a2349] py-3">
+            {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{authMode === 'login' ? 'Sign In' : 'Create Account'}<ArrowRight className="w-5 h-5 ml-2" /></>}
+          </Button>
+          <div className="text-center pt-4">
+            <button onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError('') }} className="text-gray-400 text-sm hover:text-white">
+              {authMode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
   const checkCameraSupport = () => {
     try {
@@ -471,47 +478,8 @@ function App() {
   }
 
   const confirmPicture = async () => {
-    setScreen('loading')
-    try {
-      const img = new Image()
-      img.src = capturedImage
-      await new Promise((resolve, reject) => {
-        img.onload = resolve
-        img.onerror = reject
-      })
-      const { classifyFood } = await import('./services/tensorflowRecognition')
-      const foodPredictions = await classifyFood(img)
-      console.log('Food predictions:', foodPredictions)
-      if (!foodPredictions || foodPredictions.length === 0) {
-        alert('No food detected. Please take a photo of food.')
-        setScreen('preview')
-        return
-      }
-      const topResult = foodPredictions[0]
-      setNutritionResult(topResult)
-      setLogbookEntries(prev => [{
-        id: Date.now(),
-        name: topResult.name,
-        calories: topResult.nutrition.calories,
-        protein: parseFloat(topResult.nutrition.protein) || 0,
-        carbs: parseFloat(topResult.nutrition.carbs) || 0,
-        fat: parseFloat(topResult.nutrition.fat) || 0,
-        meal: 'snack',
-        timestamp: new Date(),
-        scannedViaBarcode: false,
-      }, ...prev])
-      setScreen('results')
-      setDrawerOpen(true)
-      await fetch(`${API_URL}/log-usage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foodName: topResult.name, calories: topResult.nutrition.calories, timestamp: new Date().toISOString() }),
-      })
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Something went wrong. Please try again.')
-      setScreen('preview')
-    }
+    alert('AI image recognition is temporarily unavailable. Please use search, barcode, or manual entry to add meals.')
+    setScreen('preview')
   }
 
   const resetApp = () => {
@@ -527,10 +495,8 @@ function App() {
     return () => stopCamera()
   }, [screen])
 
-  // ← CHANGED: now passes authProps to AuthScreen instead of rendering inline
-  if (screen === 'login') return <AuthScreen {...authProps} />
-  if (screen === 'register') return <AuthScreen {...authProps} />
-  if (!user) return <AuthScreen {...authProps} />
+  if (screen === 'login') return <AuthScreen />
+  if (screen === 'register') return <AuthScreen />
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -589,31 +555,10 @@ function App() {
     return (
       <Layout activeTab="home" onTabClick={(id) => setScreen(id)}>
         <div className="flex-1 flex flex-col p-4 pt-16 pb-28 overflow-y-auto">
-
           <div className="mb-6 mt-2">
-            <h1 className="text-3xl font-bold text-white">{greeting()}, {user?.name?.split(' ')[0] || 'there'}</h1>
+            <h1 className="text-3xl font-bold text-white">{greeting()}</h1>
             <p className="text-gray-400 mt-1 text-base">You are {remaining.calories > 0 ? remaining.calories : 0} kcal away from your goal</p>
           </div>
-
-          {!hasAnyMeals && (
-            <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 mb-4">
-              <h3 className="text-orange-400 font-semibold mb-3">Getting Started</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">1</div>
-                  <p className="text-gray-300 text-sm">Tap the <span className="text-orange-400 font-medium">orange camera button</span> below to scan your food</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">2</div>
-                  <p className="text-gray-300 text-sm">Point your camera at food and tap <span className="text-orange-400 font-medium">Confirm</span> to analyse it</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">3</div>
-                  <p className="text-gray-300 text-sm">Tap <span className="text-orange-400 font-medium">Add to My Meals</span> to log it and track your nutrition</p>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="bg-[#161B22] rounded-2xl p-6 mb-4 border border-[#1E2530]">
             <div className="flex justify-between items-center mb-4">
@@ -657,7 +602,7 @@ function App() {
               <div className="flex flex-col items-center py-6">
                 <ClipboardIcon />
                 <p className="text-white text-sm mt-4">No meals logged yet</p>
-                <p className="text-gray-500 text-xs mt-1">Tap the camera button to scan food</p>
+                <p className="text-gray-500 text-xs mt-1">Tap + to add your first meal</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -732,27 +677,9 @@ function App() {
             </div>
           </div>
 
-          <div className="fixed bottom-24 right-4 flex flex-col items-center gap-1 z-40">
-            <span className="text-white text-xs bg-black/60 px-2 py-1 rounded-full">Scan Food</span>
-            <button
-              onClick={() => setScreen('camera')}
-              style={{
-                width: '64px',
-                height: '64px',
-                backgroundColor: '#F97316',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: 'none',
-                cursor: 'pointer',
-                animation: !hasAnyMeals ? 'pulse-ring 2s infinite' : 'none',
-              }}
-            >
-              <Camera className="w-7 h-7 text-white" />
-            </button>
-          </div>
-
+          <button onClick={() => setScreen('camera')} className="fixed bottom-24 right-4 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-lg z-40 hover:bg-orange-600 transition-colors">
+            <Camera className="w-7 h-7 text-white" />
+          </button>
         </div>
       </Layout>
     )
@@ -782,7 +709,7 @@ function App() {
       if (entryDate.getTime() === yesterday.getTime()) return 'Yesterday'
       return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
     }
-    const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    const formatTime = (date) => new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
     const getMealIcon = (mealType) => {
       const mapping = { 'breakfast': MealIconBreakfast, 'lunch': MealIconLunch, 'dinner': MealIconDinner, 'snack': MealIconSnack }
       return mapping[mealType] || MealIconSnack
@@ -794,7 +721,7 @@ function App() {
       return true
     })
     const groupedEntries = filteredEntries.reduce((groups, entry) => {
-      const header = formatDateHeader(entry.timestamp)
+      const header = formatDateHeader(new Date(entry.timestamp))
       if (!groups[header]) groups[header] = []
       groups[header].push(entry)
       return groups
@@ -802,7 +729,7 @@ function App() {
     const toggleExpand = (id) => setExpandedEntry(expandedEntry === id ? null : id)
     const filterOptions = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Barcode']
     const getMealLabel = (meal) => meal.charAt(0).toUpperCase() + meal.slice(1)
-    const weekEntries = logbookEntries.filter(e => { const weekAgo = new Date(Date.now() - 7 * 86400000); return e.timestamp >= weekAgo })
+    const weekEntries = logbookEntries.filter(e => { const weekAgo = new Date(Date.now() - 7 * 86400000); return new Date(e.timestamp) >= weekAgo })
     const avgCalories = dailyAverage
     const mostLogged = weekEntries.length > 0
       ? Object.entries(weekEntries.reduce((counts, e) => { counts[e.name] = (counts[e.name] || 0) + 1; return counts }, {})).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
@@ -1101,14 +1028,14 @@ function App() {
                     {meal.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
                         <span className="text-gray-300">{item.name}</span>
-                        <span className="text-[#0F2C5C]">{item.calories} kcal</span>
+                        <span className="text-orange-400">{item.calories} kcal</span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm">No items added yet</p>
                 )}
-                <button className="mt-2 text-[#0F2C5C] text-sm font-medium">+ Add Food</button>
+                <button className="mt-2 text-orange-500 text-sm font-medium">+ Add Food</button>
               </div>
             ))}
           </div>
