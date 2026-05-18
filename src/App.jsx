@@ -243,6 +243,40 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
 }
 
 
+const GoalModal = ({ initialGoal, onSave, onClose }) => {
+  const [localGoal, setLocalGoal] = useState(initialGoal)
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900 rounded-xl p-6 w-full max-w-sm">
+        <h3 className="text-white font-semibold text-lg mb-4">Set Daily Goals</h3>
+        <div className="space-y-4">
+          {[
+            { label: 'Calories (kcal)', key: 'calories' },
+            { label: 'Protein (g)', key: 'protein' },
+            { label: 'Carbs (g)', key: 'carbs' },
+            { label: 'Fat (g)', key: 'fat' }
+          ].map(({ label, key }) => (
+            <div key={key}>
+              <label className="text-gray-400 text-sm">{label}</label>
+              <input
+                type="number"
+                value={localGoal[key]}
+                onChange={(e) => setLocalGoal(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1 focus:outline-none"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-3 mt-6">
+          <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+          <Button onClick={() => onSave(localGoal)} className="flex-1 bg-[#0F2C5C]">Save</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const AuthScreen = ({ authMode, setAuthMode, authEmail, setAuthEmail, authPassword, setAuthPassword, authName, setAuthName, authError, authLoading, onLogin, onRegister }) => (
   <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-6 overflow-y-auto">
     <div className="w-full max-w-sm">
@@ -298,26 +332,30 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
 
-  const [dietGoals, setDietGoals] = useState({
-    calories: 2000,
-    protein: 120,
-    carbs: 250,
-    fat: 70
+  const [dietGoals, setDietGoals] = useState(() => {
+    const saved = localStorage.getItem('calcount_goals')
+    return saved ? JSON.parse(saved) : { calories: 2000, protein: 120, carbs: 250, fat: 70 }
   })
 
-  const [meals, setMeals] = useState([
-    { id: 1, name: 'Breakfast', items: [] },
-    { id: 2, name: 'Lunch', items: [] },
-    { id: 3, name: 'Dinner', items: [] },
-    { id: 4, name: 'Snacks', items: [] }
-  ])
+  const [meals, setMeals] = useState(() => {
+    const saved = localStorage.getItem('calcount_meals')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'Breakfast', items: [] },
+      { id: 2, name: 'Lunch', items: [] },
+      { id: 3, name: 'Dinner', items: [] },
+      { id: 4, name: 'Snacks', items: [] }
+    ]
+  })
 
   const [showGoalModal, setShowGoalModal] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showPlanScanner, setShowPlanScanner] = useState(false)
-  const [newGoal, setNewGoal] = useState({ ...dietGoals })
 
-  const [logbookEntries, setLogbookEntries] = useState([])
+  const [logbookEntries, setLogbookEntries] = useState(() => {
+    const saved = localStorage.getItem('calcount_logbook')
+    return saved ? JSON.parse(saved) : []
+  })
+
   const [expandedEntry, setExpandedEntry] = useState(null)
   const [logbookFilter, setLogbookFilter] = useState('All')
   const [logbookSearch, setLogbookSearch] = useState('')
@@ -333,6 +371,18 @@ function App() {
       setScreen('home')
     }
   }, [])
+
+  useEffect(() => {
+    localStorage.setItem('calcount_meals', JSON.stringify(meals))
+  }, [meals])
+
+  useEffect(() => {
+    localStorage.setItem('calcount_logbook', JSON.stringify(logbookEntries))
+  }, [logbookEntries])
+
+  useEffect(() => {
+    localStorage.setItem('calcount_goals', JSON.stringify(dietGoals))
+  }, [dietGoals])
 
   const handleRegister = () => {
     setAuthLoading(true)
@@ -376,7 +426,6 @@ function App() {
     setAuthName('')
     setScreen('login')
   }
-
 
   const authProps = {
     authMode, setAuthMode,
@@ -497,7 +546,7 @@ function App() {
         carbs: parseFloat(topResult.nutrition.carbs) || 0,
         fat: parseFloat(topResult.nutrition.fat) || 0,
         meal: 'snack',
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         scannedViaBarcode: false,
       }, ...prev])
       setScreen('results')
@@ -527,7 +576,6 @@ function App() {
     return () => stopCamera()
   }, [screen])
 
-  // ← CHANGED: now passes authProps to AuthScreen instead of rendering inline
   if (screen === 'login') return <AuthScreen {...authProps} />
   if (screen === 'register') return <AuthScreen {...authProps} />
   if (!user) return <AuthScreen {...authProps} />
@@ -641,7 +689,7 @@ function App() {
                 <span className="text-gray-500 text-xs ml-1">Protein</span>
               </div>
               <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
-                <span className="text-amber-400 font-semibold">{consumed.carbs}g</span>
+                <span className="text-green-400 font-semibold">{consumed.carbs}g</span>
                 <span className="text-gray-500 text-xs ml-1">Carbs</span>
               </div>
               <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
@@ -765,15 +813,16 @@ function App() {
     const totalFat = meals.reduce((sum, meal) => sum + meal.items.reduce((s, item) => s + (item.fat || 0), 0), 0)
     const macroData = totalConsumed > 0 ? [
       { name: 'Protein', value: totalProtein, color: '#ef4444' },
-      { name: 'Carbs', value: totalCarbs, color: '#f59e0b' },
+      { name: 'Carbs', value: totalCarbs, color: '#0bf52a' },
       { name: 'Fat', value: totalFat, color: '#eab308' }
     ] : [
       { name: 'Protein', value: 0, color: '#374151' },
       { name: 'Carbs', value: 0, color: '#374151' },
       { name: 'Fat', value: 0, color: '#374151' }
     ]
-    const dailyAverage = logbookEntries.length > 0 ? Math.round(logbookEntries.reduce((s, e) => s + e.calories, 0) / 7) : 0
-    const formatDateHeader = (date) => {
+    const dailyAverage = logbookEntries.length > 0 ? Math.round(logbookEntries.reduce((s, e) => s + (parseFloat(e.calories) || 0), 0) / 7) : 0
+    const formatDateHeader = (dateStr) => {
+      const date = new Date(dateStr)
       const now = new Date()
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
       const yesterday = new Date(today.getTime() - 86400000)
@@ -782,7 +831,7 @@ function App() {
       if (entryDate.getTime() === yesterday.getTime()) return 'Yesterday'
       return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
     }
-    const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
     const getMealIcon = (mealType) => {
       const mapping = { 'breakfast': MealIconBreakfast, 'lunch': MealIconLunch, 'dinner': MealIconDinner, 'snack': MealIconSnack }
       return mapping[mealType] || MealIconSnack
@@ -802,8 +851,7 @@ function App() {
     const toggleExpand = (id) => setExpandedEntry(expandedEntry === id ? null : id)
     const filterOptions = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Barcode']
     const getMealLabel = (meal) => meal.charAt(0).toUpperCase() + meal.slice(1)
-    const weekEntries = logbookEntries.filter(e => { const weekAgo = new Date(Date.now() - 7 * 86400000); return e.timestamp >= weekAgo })
-    const avgCalories = dailyAverage
+    const weekEntries = logbookEntries.filter(e => { const weekAgo = new Date(Date.now() - 7 * 86400000); return new Date(e.timestamp) >= weekAgo })
     const mostLogged = weekEntries.length > 0
       ? Object.entries(weekEntries.reduce((counts, e) => { counts[e.name] = (counts[e.name] || 0) + 1; return counts }, {})).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
       : 'None'
@@ -845,7 +893,7 @@ function App() {
                 <p className="text-gray-500 text-xs">logged this week</p>
               </div>
               <div className="bg-[#0D1117] rounded-lg p-3 text-center">
-                <p className="text-white font-semibold text-lg">{avgCalories}</p>
+                <p className="text-white font-semibold text-lg">{dailyAverage}</p>
                 <p className="text-gray-500 text-xs">kcal / day</p>
               </div>
               <div className="bg-[#0D1117] rounded-lg p-3 text-center">
@@ -1083,7 +1131,7 @@ function App() {
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div><span className="text-red-400">{totalProtein}g</span><p className="text-gray-500">Protein</p></div>
-              <div><span className="text-amber-400">{totalCarbs}g</span><p className="text-gray-500">Carbs</p></div>
+              <div><span className="text-green-400">{totalCarbs}g</span><p className="text-gray-500">Carbs</p></div>
               <div><span className="text-yellow-400">{totalFat}g</span><p className="text-gray-500">Fat</p></div>
             </div>
           </div>
@@ -1101,14 +1149,14 @@ function App() {
                     {meal.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
                         <span className="text-gray-300">{item.name}</span>
-                        <span className="text-[#0F2C5C]">{item.calories} kcal</span>
+                        <span className="text-orange-400">{item.calories} kcal</span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm">No items added yet</p>
                 )}
-                <button className="mt-2 text-[#0F2C5C] text-sm font-medium">+ Add Food</button>
+                <button className="mt-2 text-orange-500 text-sm font-medium">+ Add Food</button>
               </div>
             ))}
           </div>
@@ -1119,24 +1167,11 @@ function App() {
         )}
 
         {showGoalModal && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-900 rounded-xl p-6 w-full max-w-sm">
-              <h3 className="text-white font-semibold text-lg mb-4">Set Daily Goals</h3>
-              <div className="space-y-4">
-                {[{ label: 'Calories (kcal)', key: 'calories' }, { label: 'Protein (g)', key: 'protein' }, { label: 'Carbs (g)', key: 'carbs' }, { label: 'Fat (g)', key: 'fat' }].map(({ label, key }) => (
-                  <div key={key}>
-                    <label className="text-gray-400 text-sm">{label}</label>
-                    <input type="number" value={newGoal[key]} onChange={(e) => setNewGoal({ ...newGoal, [key]: Number(e.target.value) })}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1" />
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowGoalModal(false)} className="flex-1">Cancel</Button>
-                <Button onClick={() => { setDietGoals(newGoal); setShowGoalModal(false) }} className="flex-1 bg-[#0F2C5C]">Save</Button>
-              </div>
-            </div>
-          </div>
+          <GoalModal
+            initialGoal={dietGoals}
+            onSave={(savedGoal) => { setDietGoals(savedGoal); setShowGoalModal(false) }}
+            onClose={() => setShowGoalModal(false)}
+          />
         )}
       </Layout>
     )

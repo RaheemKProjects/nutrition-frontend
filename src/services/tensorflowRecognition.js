@@ -7,7 +7,8 @@ let cocoModel = null
 let mobileModel = null
 
 const FOOD_CLASSES = {
-  
+
+  // fruits
   'banana': true,
   'apple': true,
   'orange': true,
@@ -15,7 +16,7 @@ const FOOD_CLASSES = {
   'strawberry': true,
   'pineapple': true,
 
-  
+  //vegetables
   'broccoli': true,
   'carrot': true,
   'cucumber': true,
@@ -67,7 +68,7 @@ export async function classifyFood(imgElement) {
   console.log('MobileNet results:', mobileResults)
 
   const foodPredictions = []
-  const seenFoods = new Set() // prevent duplicates
+  const seenFoods = new Set() 
 
   
   cocoResults.forEach(prediction => {
