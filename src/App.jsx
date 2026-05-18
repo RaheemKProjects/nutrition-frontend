@@ -685,15 +685,15 @@ function App() {
             </div>
             <div className="flex justify-center gap-3 mt-4">
               <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
-                <span className="text-red-400 font-semibold">{consumed.protein}g</span>
+                <span className="text-red-400 font-semibold">{Math.round(consumed.protein)}g</span>
                 <span className="text-gray-500 text-xs ml-1">Protein</span>
               </div>
               <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
-                <span className="text-green-400 font-semibold">{consumed.carbs}g</span>
+                <span className="text-green-400 font-semibold">{Math.round(consumed.carbs)}g</span>
                 <span className="text-gray-500 text-xs ml-1">Carbs</span>
               </div>
               <div className="bg-[#0D1117] px-4 py-2 rounded-full border border-[#1E2530]">
-                <span className="text-yellow-400 font-semibold">{consumed.fat}g</span>
+                <span className="text-yellow-400 font-semibold">{Math.round(consumed.fat)}g</span>
                 <span className="text-gray-500 text-xs ml-1">Fat</span>
               </div>
             </div>
@@ -875,7 +875,7 @@ function App() {
             <div className="grid grid-cols-3 gap-2 mt-2">
               {macroData.map((macro) => (
                 <div key={macro.name} className="text-center">
-                  <span className="text-sm font-medium" style={{ color: macro.color }}>{macro.value}g</span>
+                  <span className="text-sm font-medium" style={{ color: macro.color }}>{Math.round(macro.value)}g</span>
                   <p className="text-xs text-gray-500">{macro.name}</p>
                 </div>
               ))}
@@ -1130,9 +1130,9 @@ function App() {
               <div className="h-full bg-[#0F2C5C] rounded-full transition-all" style={{ width: `${Math.min((totalCalories / dietGoals.calories) * 100, 100)}%` }} />
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div><span className="text-red-400">{totalProtein}g</span><p className="text-gray-500">Protein</p></div>
-              <div><span className="text-green-400">{totalCarbs}g</span><p className="text-gray-500">Carbs</p></div>
-              <div><span className="text-yellow-400">{totalFat}g</span><p className="text-gray-500">Fat</p></div>
+              <div><span className="text-red-400">{Math.round(totalProtein)}g</span><p className="text-gray-500">Protein</p></div>
+              <div><span className="text-green-400">{Math.round(totalCarbs)}g</span><p className="text-gray-500">Carbs</p></div>
+              <div><span className="text-yellow-400">{Math.round(totalFat)}g</span><p className="text-gray-500">Fat</p></div>
             </div>
           </div>
 
