@@ -224,7 +224,7 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-gray-500">Carbs</p>
-                        <p className="text-xs font-medium text-amber-400">{scan.carbs}</p>
+                        <p className="text-xs font-medium text-green-400">{scan.carbs}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-gray-500">Fat</p>
@@ -241,7 +241,6 @@ const NutritionCalendar = ({ onClose, logbookEntries }) => {
     </div>
   )
 }
-
 
 const GoalModal = ({ initialGoal, onSave, onClose }) => {
   const [localGoal, setLocalGoal] = useState(initialGoal)
@@ -519,6 +518,7 @@ function App() {
     setTimeout(startCamera, 100)
   }
 
+  // ← FIXED: now detects and logs ALL food items in one capture
   const confirmPicture = async () => {
     setScreen('loading')
     try {
@@ -536,26 +536,35 @@ function App() {
         setScreen('preview')
         return
       }
-      const topResult = foodPredictions[0]
-      setNutritionResult(topResult)
-      setLogbookEntries(prev => [{
-        id: Date.now(),
-        name: topResult.name,
-        calories: topResult.nutrition.calories,
-        protein: parseFloat(topResult.nutrition.protein) || 0,
-        carbs: parseFloat(topResult.nutrition.carbs) || 0,
-        fat: parseFloat(topResult.nutrition.fat) || 0,
+
+      // Store all results as array
+      setNutritionResult(foodPredictions)
+
+      // Log all detected foods to logbook
+      const newEntries = foodPredictions.map((result, i) => ({
+        id: Date.now() + i,
+        name: result.name,
+        calories: result.nutrition.calories,
+        protein: parseFloat(result.nutrition.protein) || 0,
+        carbs: parseFloat(result.nutrition.carbs) || 0,
+        fat: parseFloat(result.nutrition.fat) || 0,
         meal: 'snack',
         timestamp: new Date().toISOString(),
         scannedViaBarcode: false,
-      }, ...prev])
+      }))
+      setLogbookEntries(prev => [...newEntries, ...prev])
+
       setScreen('results')
       setDrawerOpen(true)
-      await fetch(`${API_URL}/log-usage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foodName: topResult.name, calories: topResult.nutrition.calories, timestamp: new Date().toISOString() }),
-      })
+
+      // Log all to backend
+      for (const result of foodPredictions) {
+        await fetch(`${API_URL}/log-usage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ foodName: result.name, calories: result.nutrition.calories, timestamp: new Date().toISOString() }),
+        })
+      }
     } catch (error) {
       console.error('Error:', error)
       alert('Something went wrong. Please try again.')
@@ -934,7 +943,7 @@ function App() {
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 bg-[#EFF3FB] rounded-lg flex items-center justify-center"><MealIcon /></div>
                               <div>
-                                <p className="text-white text-sm font-medium">{entry.name}</p>
+                                <p className="text-white text-sm font-medium capitalize">{entry.name}</p>
                                 <p className="text-gray-500 text-xs">{getMealLabel(entry.meal)} - {formatTime(entry.timestamp)}</p>
                               </div>
                             </div>
@@ -948,7 +957,7 @@ function App() {
                               <div className="flex items-center gap-3">
                                 {[
                                   { label: 'Protein', value: entry.protein, color: 'red', max: 60 },
-                                  { label: 'Carbs', value: entry.carbs, color: 'amber', max: 100 },
+                                  { label: 'Carbs', value: entry.carbs, color: 'green', max: 100 },
                                   { label: 'Fat', value: entry.fat, color: 'yellow', max: 50 },
                                 ].map(({ label, value, color, max }) => (
                                   <div key={label} className="flex-1">
@@ -1018,6 +1027,7 @@ function App() {
     </div>
   )
 
+  // ← FIXED: results screen now shows all detected food items
   if (screen === 'results') return (
     <div className="min-h-screen w-full relative">
       <img src={capturedImage} alt="Results background" className="absolute inset-0 w-full h-full object-cover" />
@@ -1026,54 +1036,55 @@ function App() {
         <DrawerContent>
           <DrawerHeader className="text-left">
             <DrawerTitle>Nutrition Facts</DrawerTitle>
-            <DrawerDescription>{nutritionResult?.name} — {nutritionResult?.confidence}% confidence</DrawerDescription>
+            <DrawerDescription>
+              {Array.isArray(nutritionResult)
+                ? `${nutritionResult.length} food item${nutritionResult.length > 1 ? 's' : ''} detected`
+                : ''}
+            </DrawerDescription>
           </DrawerHeader>
-          <div className="px-4 pb-4">
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Flame className="w-4 h-4" /><span className="text-xs font-medium">Calories</span></div>
-                  <p className="text-2xl font-bold text-orange-700">{nutritionResult?.nutrition?.calories}</p>
-                  <p className="text-xs text-orange-500">kcal</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Beef className="w-4 h-4" /><span className="text-xs font-medium">Protein</span></div>
-                  <p className="text-2xl font-bold text-red-700">{nutritionResult?.nutrition?.protein}</p>
-                  <p className="text-xs text-red-500">g</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Wheat className="w-4 h-4" /><span className="text-xs font-medium">Carbs</span></div>
-                  <p className="text-2xl font-bold text-amber-700">{nutritionResult?.nutrition?.carbs}</p>
-                  <p className="text-xs text-amber-500">g</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-[#0F2C5C]/10 border-[#0F2C5C]/20">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-[#0F2C5C] mb-1"><Droplets className="w-4 h-4" /><span className="text-xs font-medium">Fat</span></div>
-                  <p className="text-2xl font-bold text-yellow-700">{nutritionResult?.nutrition?.fat}</p>
-                  <p className="text-xs text-yellow-500">g</p>
-                </CardContent>
-              </Card>
-            </div>
+          <div className="px-4 pb-4 space-y-4 max-h-[60vh] overflow-y-auto">
+            {Array.isArray(nutritionResult) && nutritionResult.map((result, index) => (
+              <div key={index} className="bg-[#0D1117] rounded-xl p-4 border border-[#1E2530]">
+                <p className="text-white font-semibold capitalize mb-3 text-sm">
+                  {result.name}
+                  <span className="text-gray-500 text-xs ml-2">{result.confidence}% confidence</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-[#161B22] rounded-lg p-3 text-center">
+                    <p className="text-orange-500 font-bold text-lg">{result.nutrition.calories}</p>
+                    <p className="text-gray-500 text-xs">kcal</p>
+                  </div>
+                  <div className="bg-[#161B22] rounded-lg p-3 text-center">
+                    <p className="text-red-400 font-bold text-lg">{result.nutrition.protein}</p>
+                    <p className="text-gray-500 text-xs">Protein</p>
+                  </div>
+                  <div className="bg-[#161B22] rounded-lg p-3 text-center">
+                    <p className="text-green-400 font-bold text-lg">{result.nutrition.carbs}</p>
+                    <p className="text-gray-500 text-xs">Carbs</p>
+                  </div>
+                  <div className="bg-[#161B22] rounded-lg p-3 text-center">
+                    <p className="text-yellow-400 font-bold text-lg">{result.nutrition.fat}</p>
+                    <p className="text-gray-500 text-xs">Fat</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
           <DrawerFooter>
             <Button
               onClick={() => {
-                if (nutritionResult) {
+                if (Array.isArray(nutritionResult) && nutritionResult.length > 0) {
+                  const newItems = nutritionResult.map(result => ({
+                    name: result.name,
+                    calories: parseFloat(result.nutrition?.calories) || 0,
+                    protein: parseFloat(result.nutrition?.protein) || 0,
+                    carbs: parseFloat(result.nutrition?.carbs) || 0,
+                    fat: parseFloat(result.nutrition?.fat) || 0,
+                  }))
                   setMeals(prev => prev.map(meal =>
                     meal.name === 'Snacks' ? {
                       ...meal,
-                      items: [...meal.items, {
-                        name: nutritionResult.name,
-                        calories: parseFloat(nutritionResult.nutrition?.calories) || 0,
-                        protein: parseFloat(nutritionResult.nutrition?.protein) || 0,
-                        carbs: parseFloat(nutritionResult.nutrition?.carbs) || 0,
-                        fat: parseFloat(nutritionResult.nutrition?.fat) || 0,
-                      }]
+                      items: [...meal.items, ...newItems]
                     } : meal
                   ))
                 }
@@ -1148,7 +1159,7 @@ function App() {
                   <div className="space-y-2">
                     {meal.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-300">{item.name}</span>
+                        <span className="text-gray-300 capitalize">{item.name}</span>
                         <span className="text-orange-400">{item.calories} kcal</span>
                       </div>
                     ))}
